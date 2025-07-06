@@ -19,10 +19,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AdminRondeController extends AbstractController
 {
     #[Route('/', name: 'admin_rondes_index', methods: ['GET'])]
-    public function index(RondeRepository $repo): Response
+    public function index(
+        RondeRepository $repo,
+        UserRepository $userRepo          // <-- injecte le repo User
+    ): Response
     {
         return $this->render('admin/ronde/index.html.twig', [
             'rondes' => $repo->findAll(),
+            'users'  => $userRepo->findAll(),   // <-- passe les utilisateurs à la vue
         ]);
     }
 
@@ -92,4 +96,24 @@ class AdminRondeController extends AbstractController
             }
         }
     }
+
+    // src/Controller/AdminRondeController.php (suite)
+
+    #[Route('/ajax/create', name: 'admin_rondes_ajax_create', methods: ['POST'])]
+    public function ajaxCreate(Request $req, EntityManagerInterface $em, UserRepository $ur): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        $ronde = new Ronde();
+        $this->hydrate($ronde, $req, $ur);
+        $em->persist($ronde); $em->flush();
+        return $this->json(['status'=>'success']);
+    }
+
+    #[Route('/ajax/{id}/update', name: 'admin_rondes_ajax_update', methods: ['POST'])]
+    public function ajaxUpdate(Ronde $ronde, Request $req, EntityManagerInterface $em, UserRepository $ur): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        $this->hydrate($ronde, $req, $ur);
+        $em->flush();
+        return $this->json(['status'=>'success']);
+    }
+
 }
