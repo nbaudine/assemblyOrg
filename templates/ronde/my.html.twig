@@ -1,33 +1,82 @@
+{# templates/ronde/my.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Mes rondes{% endblock %}
 
+{# ─────────────────────────── CSS ─────────────────────────── #}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Animation douce à l’apparition */
+        .fade-in { animation: fadeIn 0.4s ease-out both; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Titres de journée */
+        .list-day-title {
+            color: #0055A5;
+            font-weight: 700;
+            border-bottom: 2px solid #e3e3e3;
+            padding-bottom: .35rem;
+        }
+
+        /* Items */
+        .list-group-item {
+            transition: background-color .2s;
+        }
+        .list-group-item:hover {
+            background-color: #f6faff;
+        }
+
+        /* Icônes bleues cohérentes */
+        .bi-clock,
+        .bi-calendar-event,
+        .bi-calendar-check,
+        .bi-people { color: #0078D4; }
+    </style>
+{% endblock %}
+
+{# ─────────────────────────── BODY ─────────────────────────── #}
 {% block body %}
-    <main class="container py-4">
-        <h2 class="mb-4 fw-bold" style="color:#0055A5;"><i class="bi bi-calendar-check me-2"></i>Mes rondes à venir</h2>
+    <main class="container py-4 fade-in">
+        <h2 class="mb-4 fw-bold text-primary">
+            <i class="bi bi-calendar-check me-2"></i>Mes rondes à venir
+        </h2>
 
         {% if rondes is empty %}
-            <div class="alert alert-info">Aucune ronde prévue pour le moment.</div>
+            <div class="alert alert-info shadow-sm">
+                <i class="bi bi-info-circle me-1"></i>Aucune ronde prévue pour le moment.
+            </div>
         {% else %}
             {% set lastDay = null %}
             {% for r in rondes %}
+                {# ─────────── Nouvelle journée ─────────── #}
                 {% set day = r.start|date('Y-m-d') %}
                 {% if day != lastDay %}
                     {% if not loop.first %}</ul>{% endif %}
-                    <h5 class="mt-4 mb-2"><i class="bi bi-calendar-event me-1"></i>{{ r.start|date('l d F Y')|capitalize }}</h5>
+                    <h5 class="list-day-title mt-4 mb-2">
+                        <i class="bi bi-calendar-event me-1"></i>{{ r.start|date_fr }}
+                    </h5>
                     <ul class="list-group mb-2">
                     {% set lastDay = day %}
                 {% endif %}
 
+                {# ─────────── Item de ronde ─────────── #}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="bi bi-clock me-1"></i>
-                        {{ r.start|date('H:i') }} → {{ r.end|date('H:i') }}
-                        <br>
-                        <small class="text-muted">
-                            Avec :
-                            {{ r.sesUsers|filter(u => u != me)|map(u => u.prenom ~ ' ' ~ u.nom)|join(', ') }}
-                        </small>
+                        {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
+                        <div class="mt-1 small text-muted">
+                            <i class="bi bi-people me-1"></i>
+                            Avec&nbsp;:
+                            {{ r.sesUsers
+                            |filter(u => u != me)
+                            |map(u => u.prenom ~ ' ' ~ u.nom)
+                            |join(', ')
+                            }}
+                        </div>
                     </div>
                 </li>
             {% endfor %}
