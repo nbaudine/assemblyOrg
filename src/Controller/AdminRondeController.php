@@ -19,17 +19,42 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class AdminRondeController extends AbstractController
 {
-    #[Route('/', name: 'admin_rondes_index', methods: ['GET'])]
+    // src/Controller/Admin/RondeAdminController.php
+    #[Route('/admin/rondes', name: 'admin_rondes_index')]
     public function index(
-        RondeRepository $repo,
-        UserRepository $userRepo          // <-- injecte le repo User
-    ): Response
-    {
+        RondeRepository         $rondeRepo,
+        EntityManagerInterface  $em,
+    ): Response {
+        $rondes = $rondeRepo->findBy([], ['start' => 'ASC']);
+
+        // --- on récupère pour TOUTES les rondes affichées la liste des users indisponibles ---
+        $ids   = array_map(fn (Ronde $r) => $r->getId(), $rondes);
+
+        $rows = $em->createQuery(/** @lang DQL */'
+        SELECT r.id   AS ronde_id,
+               u.id   AS user_id
+        FROM   App\Entity\Ronde            r
+        JOIN   r.sesUsers                  u
+        JOIN   App\Entity\Indisponibilite  ind WITH ind.user = u
+        WHERE  r.id        IN (:ids)
+          AND  r.start    >= ind.start
+          AND  r.end      <= ind.end
+    ')
+            ->setParameter('ids', $ids)
+            ->getArrayResult();
+
+        /** @var array<int, int[]> $unavailableMap  ronde_id => [user_id, …] */
+        $unavailableMap = [];
+        foreach ($rows as $row) {
+            $unavailableMap[$row['ronde_id']][] = (int) $row['user_id'];
+        }
+
         return $this->render('admin/ronde/index.html.twig', [
-            'rondes' => $repo->findAll(),
-            'users'  => $userRepo->findAll(),   // <-- passe les utilisateurs à la vue
+            'rondes'          => $rondes,
+            'unavailableMap'  => $unavailableMap,   // <—— nouveau !
         ]);
     }
+
 
     #[Route('/new', name: 'admin_rondes_new', methods: ['GET', 'POST'])]
     public function new(Request $req, EntityManagerInterface $em, UserRepository $userRepo): Response

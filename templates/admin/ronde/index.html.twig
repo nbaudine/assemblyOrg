@@ -68,6 +68,11 @@
                 margin-top: 0.5rem;
             }
         }
+
+        .badge-unavailable{
+            background: linear-gradient(90deg,#FF8C00,#FF6400);
+            color:#fff;
+        }
     </style>
 {% endblock %}
 
@@ -135,8 +140,13 @@
                             <h6 class="mb-1 text-primary">
                                 <i class="bi bi-clock me-1"></i>{{ r.start|date('H:i') }} → {{ r.end|date('H:i') }}
                             </h6>
+                            {% set unavailableIds = unavailableMap[r.id]|default([]) %}
                             {% for u in r.sesUsers %}
-                                <span class="badge-user">{{ u.prenom }} {{ u.nom }}</span>
+                                {% set isUnavailable = u.id in unavailableIds %}
+                                <span class="badge-user {{ isUnavailable ? 'badge-unavailable' }}"
+                                      {% if isUnavailable %}title="Créneau dans une indisponibilité"{% endif %}>
+        {{ u.prenom }} {{ u.nom }}
+    </span>
                             {% endfor %}
                         </div>
 
