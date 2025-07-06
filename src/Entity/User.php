@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -39,6 +41,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $telephone = null;
+
+    /**
+     * @var Collection<int, Ronde>
+     */
+    #[ORM\ManyToMany(targetEntity: Ronde::class, mappedBy: 'sesUsers')]
+    private Collection $rondes;
+
+    public function __construct()
+    {
+        $this->rondes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -153,6 +166,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTelephone(?string $telephone): static
     {
         $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Ronde>
+     */
+    public function getRondes(): Collection
+    {
+        return $this->rondes;
+    }
+
+    public function addRonde(Ronde $ronde): static
+    {
+        if (!$this->rondes->contains($ronde)) {
+            $this->rondes->add($ronde);
+            $ronde->addSesUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRonde(Ronde $ronde): static
+    {
+        if ($this->rondes->removeElement($ronde)) {
+            $ronde->removeSesUser($this);
+        }
 
         return $this;
     }

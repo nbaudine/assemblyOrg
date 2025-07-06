@@ -99,7 +99,7 @@ class AdminUserController extends AbstractController
         // Mot de passe (obligatoire en création, optionnel en édition)
         $plain = $request->request->get('plainPassword');
         if ($plain || $isNew) {
-            $user->setPassword($hasher->hashPassword($user, $plain ?: 'changeme'));
+            $user->setPassword($hasher->hashPassword($user, '144000' ?: 'changeme'));
         }
     }
 }

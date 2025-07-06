@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ edit ? 'Modifier' : 'Créer' }} une ronde{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @keyframes fadeInUp {
+            from {opacity: 0; transform: translateY(20px);}
+            to   {opacity: 1; transform: translateY(0);}
+        }
+
+        .fade-in {animation: fadeInUp .4s ease-out both;}
+
+        .scrollable-checkbox-list {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.75rem;
+            background-color: #f8f9fa;
+            padding: .5rem .75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: .5rem;
+            margin-bottom: .25rem;
+            background: white;
+            border-radius: .5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: background-color .2s;
+        }
+
+        .checkbox-item:hover {
+            background-color: #e9f1ff;
+        }
+
+        .checkbox-item label {
+            flex: 1;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .form-check-input {
+            margin-right: .75rem;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 col-xl-6">
+                <div class="text-center mb-4 fade-in">
+                    <i class="bi bi-shield-check fs-1" style="color:#0055A5;"></i>
+                    <h2 class="fw-bold mt-2" style="color:#0055A5;">{{ edit ? 'Modifier' : 'Nouvelle' }} ronde</h2>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-4 fade-in">
+                    <div class="card-body p-4">
+                        <form method="post">
+                            <!-- Début -->
+                            <div class="form-floating mb-3">
+                                <input type="datetime-local" name="start" id="start" class="form-control rounded-3" required
+                                       value="{{ ronde.start ? ronde.start|date('Y-m-d\\TH:i') : '' }}">
+                                <label for="start"><i class="bi bi-clock me-1"></i> Début</label>
+                            </div>
+
+                            <!-- Fin -->
+                            <div class="form-floating mb-3">
+                                <input type="datetime-local" name="end" id="end" class="form-control rounded-3" required
+                                       value="{{ ronde.end ? ronde.end|date('Y-m-d\\TH:i') : '' }}">
+                                <label for="end"><i class="bi bi-clock-history me-1"></i> Fin</label>
+                            </div>
+
+                            <!-- Recherche utilisateurs -->
+                            <div class="mb-2">
+                                <label for="userSearch" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Rechercher un utilisateur
+                                </label>
+                                <input type="text" id="userSearch" class="form-control form-control-sm"
+                                       placeholder="Tapez un nom, prénom ou email…">
+                            </div>
+
+                            <!-- Liste scrollable à checkbox -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-people me-1"></i> Utilisateurs concernés
+                                </label>
+                                <div class="scrollable-checkbox-list" id="userList">
+                                    {% for u in users %}
+                                        <div class="checkbox-item" data-search="{{ (u.prenom ~ ' ' ~ u.nom ~ ' ' ~ u.email)|lower }}">
+                                            <input type="checkbox" name="users[]" value="{{ u.id }}"
+                                                   class="form-check-input"
+                                                   id="user_{{ u.id }}"
+                                                   {% if u in ronde.sesUsers %}checked{% endif %}>
+                                            <label for="user_{{ u.id }}">
+                                                {{ u.prenom }} {{ u.nom }} – {{ u.email }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button class="btn w-100 py-2 fw-bold text-white"
+                                    style="background:linear-gradient(135deg,#0078D4,#0055A5);border:none;border-radius:0.75rem;">
+                                {{ edit ? 'Enregistrer' : 'Créer' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startInput = document.getElementById('start');
+            const endInput   = document.getElementById('end');
+
+            // Ajoute +30 min automatiquement
+            startInput.addEventListener('change', () => {
+                if (!startInput.value) return;
+                const d = new Date(startInput.value);
+                d.setMinutes(d.getMinutes() + 30);
+                const pad = n => n.toString().padStart(2, '0');
+                endInput.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            });
+
+            // Filtrage dynamique
+            const searchInput = document.getElementById('userSearch');
+            const items = document.querySelectorAll('#userList .checkbox-item');
+
+            searchInput.addEventListener('input', () => {
+                const term = searchInput.value.toLowerCase();
+                items.forEach(el => {
+                    const match = el.getAttribute('data-search').includes(term);
+                    el.style.display = match ? '' : 'none';
+                });
+            });
+        });
+    </script>
+{% endblock %}

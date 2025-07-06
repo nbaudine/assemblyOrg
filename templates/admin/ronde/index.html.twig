@@ -1,0 +1,151 @@
+{% extends 'base.html.twig' %}
+{% block title %}Gestion des rondes{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(10px);}
+            to   {opacity: 1; transform: translateY(0);}
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .badge-user {
+            background: linear-gradient(to right, #0078D4, #0055A5);
+            color: white;
+            font-size: 0.75rem;
+            margin: 0 0.2rem 0.2rem 0;
+            display: inline-block;
+            padding: 0.35em 0.6em;
+            border-radius: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+        }
+
+        .filter-group .btn-check:checked + .btn {
+            background-color: #0055A5;
+            color: white;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f1f9ff;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container py-4 fade-in">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <h1 class="h4 fw-bold m-0 text-primary"><i class="bi bi-shield-check me-2"></i>Rondes</h1>
+            <a href="{{ path('admin_rondes_new') }}" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Nouvelle ronde
+            </a>
+        </div>
+
+        {% for msg in app.flashes('success') %}
+            <div class="alert alert-success shadow-sm fade-in">{{ msg }}</div>
+        {% endfor %}
+
+        <!-- Filtres -->
+        <div class="row g-3 mb-4 fade-in">
+            <div class="col-md-6">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Nom, prénom ou date…">
+                </div>
+            </div>
+
+            <div class="col-md-6 text-md-end filter-group">
+                <div class="btn-group" role="group" aria-label="Filtres jour">
+                    <input type="radio" class="btn-check" name="filterDay" id="filterAll" value="all" checked>
+                    <label class="btn btn-outline-primary" for="filterAll">Tous</label>
+
+                    <input type="radio" class="btn-check" name="filterDay" id="filterFri" value="5">
+                    <label class="btn btn-outline-primary" for="filterFri"><i class="bi bi-calendar-week"></i> Ven</label>
+
+                    <input type="radio" class="btn-check" name="filterDay" id="filterSat" value="6">
+                    <label class="btn btn-outline-primary" for="filterSat"><i class="bi bi-calendar-weekend"></i> Sam</label>
+
+                    <input type="radio" class="btn-check" name="filterDay" id="filterSun" value="0">
+                    <label class="btn btn-outline-primary" for="filterSun"><i class="bi bi-calendar-weekend-fill"></i> Dim</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive shadow-sm rounded-4 fade-in">
+            <table class="table table-hover align-middle mb-0" id="rondeTable">
+                <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th><i class="bi bi-clock me-1"></i>Début</th>
+                    <th><i class="bi bi-clock-history me-1"></i>Fin</th>
+                    <th><i class="bi bi-people me-1"></i>Utilisateurs</th>
+                    <th class="text-end"><i class="bi bi-gear me-1"></i>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for r in rondes %}
+                    <tr data-day="{{ r.start|date('w') }}">
+                        <td>{{ r.id }}</td>
+                        <td>{{ r.start|date('d/m/Y H:i') }}</td>
+                        <td>{{ r.end|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% for u in r.sesUsers %}
+                                <span class="badge-user">{{ u.prenom }} {{ u.nom }}</span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ path('admin_rondes_edit', {id: r.id}) }}" class="btn btn-sm btn-outline-primary me-1" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ path('admin_rondes_delete', {id: r.id}) }}" method="post" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete-ronde-' ~ r.id) }}">
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette ronde ?')" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">Aucune ronde.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('searchInput');
+            const dayRadios = document.querySelectorAll('input[name="filterDay"]');
+            const rows = document.querySelectorAll('#rondeTable tbody tr');
+
+            function filterRows() {
+                const searchTerm = input.value.toLowerCase();
+                const selectedDay = document.querySelector('input[name="filterDay"]:checked').value;
+
+                rows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    const rowDay = row.getAttribute('data-day');
+
+                    const matchSearch = rowText.includes(searchTerm);
+                    const matchDay = selectedDay === 'all' || rowDay === selectedDay;
+
+                    row.style.display = (matchSearch && matchDay) ? '' : 'none';
+                });
+            }
+
+            input.addEventListener('input', filterRows);
+            dayRadios.forEach(radio => radio.addEventListener('change', filterRows));
+        });
+    </script>
+{% endblock %}

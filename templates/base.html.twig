@@ -57,12 +57,12 @@
         <li>
             <a class="nav-link {% if app.request.get('_route') starts with 'cartes' %}active{% endif %}"
                href="{{ path('cartes_index') }}">
-                <i class="bi bi-credit-card me-2"></i>Cartes
+                <i class="bi bi-map me-2"></i>Cartes
             </a>
         </li>
         <li>
             <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-               href="{{ path('rondes_index') }}">
+               href="{{ path('admin_rondes_index') }}">
                 <i class="bi bi-shield-check me-2"></i>Rondes
             </a>
         </li>
@@ -135,12 +135,12 @@
             <li>
                 <a class="nav-link {% if app.request.get('_route') starts with 'cartes' %}active{% endif %}"
                    href="{{ path('cartes_index') }}">
-                    <i class="bi bi-credit-card me-2"></i>Cartes
+                    <i class="bi bi-map me-2"></i>Cartes
                 </a>
             </li>
             <li>
                 <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-                   href="{{ path('rondes_index') }}">
+                   href="{{ path('admin_rondes_index') }}">
                     <i class="bi bi-shield-check me-2"></i>Rondes
                 </a>
             </li>
