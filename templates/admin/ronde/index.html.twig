@@ -5,40 +5,92 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        /* Animations et petits styles */
-        @keyframes fadeIn {from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-        .fade-in{animation:fadeIn .4s ease-out both;}
-
-        .badge-user{
-            background:linear-gradient(90deg,#0078D4,#0055A5);
-            color:#fff;font-size:.75rem;border-radius:.5rem;
-            padding:.25rem .45rem;margin:.1rem .15rem 0 0
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .card-rnde:hover{background:#f6faff;}
-        .card-rnde{transition:background .2s;}
+        .fade-in {
+            animation: fadeIn 0.4s ease-out both;
+        }
 
-        .btn-check:checked+label{background:#0055A5;color:#fff;}
-        .scroll-box{max-height:230px;overflow:auto;border:1px solid #dee2e6;border-radius:.5rem;padding:.5rem;}
-        .checkbox-item:hover{background:#eef6ff;border-radius:.4rem;}
-        .toast-container{position:fixed;top:1rem;right:1rem;z-index:1080}
+        .badge-user {
+            background: linear-gradient(90deg, #0078D4, #0055A5);
+            color: #fff;
+            font-size: .75rem;
+            border-radius: 0.4rem;
+            padding: 0.25rem 0.5rem;
+            margin: 0.15rem 0.25rem 0 0;
+        }
+
+        .card-rnde {
+            transition: background 0.3s, box-shadow 0.3s;
+            border-left: 5px solid #0078D4;
+            border-radius: 1rem;
+        }
+
+        .card-rnde:hover {
+            background-color: #f0f8ff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-check:checked + label {
+            background-color: #0055A5;
+            color: white;
+        }
+
+        .scroll-box {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f9f9f9;
+        }
+
+        .checkbox-item:hover {
+            background-color: #e9f5ff;
+            border-radius: 0.4rem;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1080;
+        }
+
+        @media (max-width: 767px) {
+            .card-body.d-flex {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .edit-btn, .delete-btn {
+                margin-top: 0.5rem;
+            }
+        }
     </style>
 {% endblock %}
+
 
 {# ------------------------------------------------------------------ #}
 {% block body %}
     <main class="container py-4 fade-in">
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-            <h1 class="h4 fw-bold m-0 text-primary"><i class="bi bi-shield-check me-2"></i>Rondes</h1>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+            <h1 class="h4 fw-bold text-primary m-0">
+                <i class="bi bi-shield-check me-2"></i> Gestion des rondes
+            </h1>
 
-            <button class="btn btn-primary shadow-sm" id="btnNew"
-                    data-bs-toggle="modal" data-bs-target="#rondeModal">
-                <i class="bi bi-plus-circle me-1"></i> Nouvelle ronde
-            </button>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                <a href="{{ path('admin_rondes_fill') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-lightning-charge me-1"></i> Remplissage auto
+                </a>
 
-            <a href="{{ path('admin_rondes_fill') }}" class="btn btn-primary mb-3">
-                Remplir automatiquement les rondes
-            </a>
+                <button class="btn btn-primary" id="btnNew"
+                        data-bs-toggle="modal" data-bs-target="#rondeModal">
+                    <i class="bi bi-plus-circle me-1"></i> Nouvelle ronde
+                </button>
+            </div>
         </div>
 
         {# --------- messages flash Symfony --------- #}
@@ -101,7 +153,9 @@
             <div class="modal-content">
                 <form id="rondeForm">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalTitle">Nouvelle ronde</h5>
+                        <h5 class="modal-title" id="modalTitle">
+                            <i class="bi bi-calendar-plus me-2 text-primary"></i> <span class="modal-title-text">Nouvelle ronde</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
