@@ -8,11 +8,17 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class PlanningController extends AbstractController
 {
-    #[Route('/planning', name: 'app_planning')]
+    #[Route('/rondes', name: 'rondes_index')]
     public function index(): Response
     {
         return $this->render('planning/index.html.twig', [
-            'controller_name' => 'PlanningController',
+        ]);
+    }
+
+    #[Route('/admin/rondes', name: 'admin_rondes_index')]
+    public function admin_rondes_index(): Response
+    {
+        return $this->render('planning/index.html.twig', [
         ]);
     }
 }

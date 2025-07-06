@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mon profil{% endblock %}
+
+{% block body %}
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-circle fs-1" style="color:#0055A5;"></i>
+                    <h1 class="fw-bold mt-2" style="color:#0055A5;">Mon profil</h1>
+                    <p class="text-muted small">Modifier vos informations personnelles</p>
+                </div>
+
+                {% for msg in app.flashes('success') %}
+                    <div class="alert alert-success rounded-3 shadow-sm">{{ msg }}</div>
+                {% endfor %}
+
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <form method="post">
+
+                            <div class="form-floating mb-3">
+                                <input type="email" name="email" id="email" required class="form-control rounded-3"
+                                       value="{{ user.email }}">
+                                <label for="email">Adresse e-mail</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="nom" id="nom" required class="form-control rounded-3"
+                                       value="{{ user.nom }}">
+                                <label for="nom">Nom</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="prenom" id="prenom" required class="form-control rounded-3"
+                                       value="{{ user.prenom }}">
+                                <label for="prenom">Prénom</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="tel" name="telephone" id="telephone" class="form-control rounded-3"
+                                       value="{{ user.telephone }}">
+                                <label for="telephone">Téléphone</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="password" name="plainPassword" id="plainPassword" class="form-control rounded-3" placeholder="Nouveau mot de passe">
+                                <label for="plainPassword">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+                            </div>
+
+                            <button type="submit" class="btn w-100 py-2 fw-bold text-white"
+                                    style="background: linear-gradient(135deg, #0078D4, #0055A5); border: none; border-radius: 0.75rem;">
+                                Enregistrer les modifications
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+{% endblock %}

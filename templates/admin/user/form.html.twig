@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ edit ? 'Modifier' : 'Créer' }} un utilisateur{% endblock %}
+
+{% block body %}
+    <main class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 col-xl-6">
+                <div class="text-center mb-4">
+                    <i class="bi bi-people fs-1" style="color:#0055A5;"></i>
+                    <h2 class="fw-bold mt-2" style="color:#0055A5;">
+                        {{ edit ? 'Modifier l’utilisateur' : 'Nouvel utilisateur' }}
+                    </h2>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <form method="post">
+
+                            <div class="form-floating mb-3">
+                                <input type="email" name="email" id="email" class="form-control rounded-3" required
+                                       value="{{ user.email }}">
+                                <label for="email">Adresse e-mail</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="prenom" id="prenom" class="form-control rounded-3" required
+                                       value="{{ user.prenom }}">
+                                <label for="prenom">Prénom</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="nom" id="nom" class="form-control rounded-3" required
+                                       value="{{ user.nom }}">
+                                <label for="nom">Nom</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="tel" name="telephone" id="telephone" class="form-control rounded-3"
+                                       value="{{ user.telephone }}">
+                                <label for="telephone">Téléphone</label>
+                            </div>
+
+                            {# Rôles #}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Rôles</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="ROLE_USER" id="role_user" name="roles[]"
+                                           {% if 'ROLE_USER' in user.roles %}checked{% endif %}>
+                                    <label class="form-check-label" for="role_user">ROLE_USER</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="ROLE_ADMIN" id="role_admin" name="roles[]"
+                                           {% if 'ROLE_ADMIN' in user.roles %}checked{% endif %}>
+                                    <label class="form-check-label" for="role_admin">ROLE_ADMIN</label>
+                                </div>
+                            </div>
+
+                            {# Mot de passe (obligatoire si création) #}
+                            <div class="form-floating mb-4">
+                                <input type="password" name="plainPassword" id="plainPassword" class="form-control rounded-3"
+                                       {% if not edit %}required{% endif %}>
+                                <label for="plainPassword">
+                                    {{ edit ? 'Nouveau mot de passe (laisser vide pour conserver l’actuel)' : 'Mot de passe' }}
+                                </label>
+                            </div>
+
+                            <button class="btn w-100 py-2 fw-bold text-white"
+                                    style="background:linear-gradient(135deg,#0078D4,#0055A5);border:none;border-radius:0.75rem;">
+                                {{ edit ? 'Enregistrer' : 'Créer' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
