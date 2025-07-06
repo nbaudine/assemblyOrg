@@ -62,7 +62,7 @@
         </li>
         <li>
             <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-               href="{{ path('admin_rondes_index') }}">
+               href="{{ path('user_my_rounds') }}">
                 <i class="bi bi-shield-check me-2"></i>Rondes
             </a>
         </li>
@@ -140,7 +140,7 @@
             </li>
             <li>
                 <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-                   href="{{ path('admin_rondes_index') }}">
+                   href="{{ path('user_my_rounds') }}">
                     <i class="bi bi-shield-check me-2"></i>Rondes
                 </a>
             </li>

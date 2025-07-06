@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes rondes{% endblock %}
+
+{% block body %}
+    <main class="container py-4">
+        <h2 class="mb-4 fw-bold" style="color:#0055A5;"><i class="bi bi-calendar-check me-2"></i>Mes rondes à venir</h2>
+
+        {% if rondes is empty %}
+            <div class="alert alert-info">Aucune ronde prévue pour le moment.</div>
+        {% else %}
+            {% set lastDay = null %}
+            {% for r in rondes %}
+                {% set day = r.start|date('Y-m-d') %}
+                {% if day != lastDay %}
+                    {% if not loop.first %}</ul>{% endif %}
+                    <h5 class="mt-4 mb-2"><i class="bi bi-calendar-event me-1"></i>{{ r.start|date('l d F Y')|capitalize }}</h5>
+                    <ul class="list-group mb-2">
+                    {% set lastDay = day %}
+                {% endif %}
+
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-clock me-1"></i>
+                        {{ r.start|date('H:i') }} → {{ r.end|date('H:i') }}
+                        <br>
+                        <small class="text-muted">
+                            Avec :
+                            {{ r.sesUsers|filter(u => u != me)|map(u => u.prenom ~ ' ' ~ u.nom)|join(', ') }}
+                        </small>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </main>
+{% endblock %}
