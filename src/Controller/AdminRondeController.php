@@ -22,38 +22,50 @@ class AdminRondeController extends AbstractController
     // src/Controller/Admin/RondeAdminController.php
     #[Route('/admin/rondes', name: 'admin_rondes_index')]
     public function index(
-        RondeRepository         $rondeRepo,
-        EntityManagerInterface  $em,
+        RondeRepository        $rondeRepo,
+        EntityManagerInterface $em,
     ): Response {
-        $rondes = $rondeRepo->findBy([], ['start' => 'ASC']);
+        /* ─────────── 1) Récupère les rondes non terminées ─────────── */
+        $nowParis = new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris'));
 
-        // --- on récupère pour TOUTES les rondes affichées la liste des users indisponibles ---
-        $ids   = array_map(fn (Ronde $r) => $r->getId(), $rondes);
+        /** @var Ronde[] $rondes */
+        $rondes = $rondeRepo->createQueryBuilder('r')
+            ->where('r.end >= :now')          // ← garde futur + en cours
+            ->setParameter('now', $nowParis)
+            ->orderBy('r.start', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        $rows = $em->createQuery(/** @lang DQL */'
-        SELECT r.id   AS ronde_id,
-               u.id   AS user_id
-        FROM   App\Entity\Ronde            r
-        JOIN   r.sesUsers                  u
-        JOIN   App\Entity\Indisponibilite  ind WITH ind.user = u
-        WHERE  r.id        IN (:ids)
-          AND  r.start    >= ind.start
-          AND  r.end      <= ind.end
-    ')
-            ->setParameter('ids', $ids)
-            ->getArrayResult();
-
-        /** @var array<int, int[]> $unavailableMap  ronde_id => [user_id, …] */
+        /* ─────────── 2) Mappe les utilisateurs indisponibles ─────────── */
         $unavailableMap = [];
-        foreach ($rows as $row) {
-            $unavailableMap[$row['ronde_id']][] = (int) $row['user_id'];
+        if ($rondes) {
+            $ids = array_map(static fn(Ronde $r) => $r->getId(), $rondes);
+
+            $rows = $em->createQuery(/** @lang DQL */'
+            SELECT r.id  AS ronde_id,
+                   u.id  AS user_id
+            FROM   App\Entity\Ronde            r
+            JOIN   r.sesUsers                  u
+            JOIN   App\Entity\Indisponibilite  ind WITH ind.user = u
+            WHERE  r.id  IN (:ids)
+              AND  r.start >= ind.start
+              AND  r.end   <= ind.end
+        ')
+                ->setParameter('ids', $ids)
+                ->getArrayResult();
+
+            foreach ($rows as $row) {
+                $unavailableMap[$row['ronde_id']][] = (int) $row['user_id'];
+            }
         }
 
+        /* ─────────── 3) Affiche la vue ─────────── */
         return $this->render('admin/ronde/index.html.twig', [
-            'rondes'          => $rondes,
-            'unavailableMap'  => $unavailableMap,   // <—— nouveau !
+            'rondes'         => $rondes,
+            'unavailableMap' => $unavailableMap,
         ]);
     }
+
 
 
     #[Route('/new', name: 'admin_rondes_new', methods: ['GET', 'POST'])]
