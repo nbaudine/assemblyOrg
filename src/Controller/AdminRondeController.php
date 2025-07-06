@@ -121,6 +121,65 @@ class AdminRondeController extends AbstractController
         }
     }
 
+    #[Route('/admin/rondes/fill', name: 'admin_rondes_fill')]
+    public function fillRondes(
+        RondeRepository            $rondeRepository,
+        UserRepository             $userRepository,
+        IndisponibiliteRepository  $indispoRepository,
+        EntityManagerInterface     $em
+    ): Response {
+        // 1) Toutes les rondes, triées par date la plus proche d'abord
+        $rondes = $rondeRepository->findBy([], ['start' => 'ASC']);
+
+        // 2) Tous les utilisateurs + compteur de participations courantes
+        $users      = $userRepository->findAll();
+        $userLoad   = [];                        // [id => nbParticipations]
+        foreach ($users as $u) {
+            $userLoad[$u->getId()] = $u->getRondes()->count();
+        }
+
+        // 3) Parcours de chaque ronde à compléter
+        foreach ($rondes as $ronde) {
+            while ($ronde->getSesUsers()->count() < 2) {
+                // 3-a) Filtrer les utilisateurs disponibles pendant ce créneau
+                $available = array_filter(
+                    $users,
+                    fn(User $u) =>
+                        !$ronde->getSesUsers()->contains($u) &&
+                        !$indispoRepository->isUserUnavailableDuring($u, $ronde->getStart(), $ronde->getEnd())
+                );
+
+                if (!$available) {
+                    // Aucun candidat disponible : on laisse le créneau partiellement rempli
+                    break;
+                }
+
+                // 3-b) Trier les candidats par charge croissante
+                usort(
+                    $available,
+                    fn(User $a, User $b) =>
+                        $userLoad[$a->getId()] <=> $userLoad[$b->getId()]
+                );
+
+                // 3-c) On prend le 1er (le moins chargé)
+                $chosen = $available[0];
+                $ronde->addSesUser($chosen);
+
+                // 3-d) Mise à jour immédiate du compteur !
+                $userLoad[$chosen->getId()]++;
+            }
+
+            $em->persist($ronde);
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Les rondes ont été réparties équitablement ✨');
+
+        return $this->redirectToRoute('admin_rondes_index');
+    }
+
+
+
     // src/Controller/AdminRondeController.php (suite)
 
     #[Route('/ajax/create', name: 'admin_rondes_ajax_create', methods: ['POST'])]

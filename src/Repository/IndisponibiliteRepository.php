@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Indisponibilite;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -29,6 +30,20 @@ class IndisponibiliteRepository extends ServiceEntityRepository
 
         return array_column($qb->getQuery()->getResult(), 1);
     }
+
+    public function isUserUnavailableDuring(User $user, \DateTimeInterface $start, \DateTimeInterface $end): bool
+    {
+        return $this->createQueryBuilder('i')
+                ->andWhere('i.user = :user')
+                ->andWhere('i.start < :end')
+                ->andWhere('i.end > :start')
+                ->setParameter('user', $user)
+                ->setParameter('start', $start)
+                ->setParameter('end', $end)
+                ->getQuery()
+                ->getOneOrNullResult() !== null;
+    }
+
 
     //    /**
     //     * @return Indisponibilite[] Returns an array of Indisponibilite objects
