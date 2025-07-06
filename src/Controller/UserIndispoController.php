@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Indisponibilite;
 use App\Repository\IndisponibiliteRepository;
+use App\Repository\RondeRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,20 +18,28 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class UserIndispoController extends AbstractController
 {
     #[Route('/', name: 'user_indispo_index', methods: ['GET'])]
-    public function index(IndisponibiliteRepository $repo): Response
+    public function index(IndisponibiliteRepository $indispoRepo,RondeRepository $rondeRepository): Response
     {
         $me   = $this->getUser();
         $now  = new \DateTimeImmutable();
 
-        $indispos = $repo->createQueryBuilder('i')
+        $indispos = $indispoRepo->createQueryBuilder('i')
             ->andWhere('i.user = :me')->setParameter('me', $me)
             ->andWhere('i.end >= :now')->setParameter('now', $now)
             ->orderBy('i.start', 'ASC')
             ->getQuery()->getResult();
 
+        $futureDates = array_unique(array_map(
+            fn($r) => $r->getStart()->format('Y-m-d'),
+            $rondeRepository->findFuture() // méthode à adapter selon ton repo
+        ));
+
+        sort($futureDates);
         return $this->render('indispo/my.html.twig', [
-            'indispos' => $indispos,
+            'indispos' => $indispoRepo->findByUser($this->getUser()),
+            'joursRondes' => $futureDates,
         ]);
+
     }
 
     #[Route('/ajax/create', name: 'user_indispo_ajax_create', methods: ['POST'])]

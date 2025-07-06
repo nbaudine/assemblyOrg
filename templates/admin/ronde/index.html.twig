@@ -144,9 +144,22 @@
                             {% for u in r.sesUsers %}
                                 {% set isUnavailable = u.id in unavailableIds %}
                                 <span class="badge-user {{ isUnavailable ? 'badge-unavailable' }}"
-                                      {% if isUnavailable %}title="Créneau dans une indisponibilité"{% endif %}>
-        {{ u.prenom }} {{ u.nom }}
-    </span>
+                                      role="button"
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#userModal"
+                                      data-bs-title="{{ u.prenom }} {{ u.nom }}"
+                                      data-nom="{{ u.prenom }} {{ u.nom }}"
+                                      data-email="{{ u.email }}"
+                                      data-tel="{{ u.telephone ?? 'Non renseigné' }}"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="Voir le contact"
+                                      {% if isUnavailable %}aria-label="Créneau dans une indisponibilité"{% endif %}>
+    {{ u.prenom }} {{ u.nom }}
+</span>
+
+
+
                             {% endfor %}
                         </div>
 
@@ -173,6 +186,26 @@
             <div class="alert alert-info text-center mt-4"><i class="bi bi-info-circle me-1"></i>Aucune ronde.</div>
         {% endfor %}
     </main>
+
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-primary shadow rounded-4">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title" id="userModalLabel">
+                        <i class="bi bi-person-lines-fill me-2"></i>Coordonnées du participant
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><i class="bi bi-person me-2 text-primary"></i><strong>Nom :</strong> <span id="userModalName"></span></p>
+                    <p><i class="bi bi-envelope me-2 text-primary"></i><strong>Email :</strong> <a href="#" id="userModalEmail"></a></p>
+                    <p><i class="bi bi-telephone me-2 text-primary"></i><strong>Téléphone :</strong> <a href="#" id="userModalTel"></a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     {# =====================  MODAL  ===================== #}
     <div class="modal fade" id="rondeModal" tabindex="-1" aria-hidden="true">
@@ -341,6 +374,30 @@
                     alert('Erreur serveur, vérifiez les champs.');
                 }
             });
+
+            // Initialisation tooltip (desktop)
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+
+// Modale contact utilisateur
+            const userModal = document.getElementById('userModal');
+            userModal.addEventListener('show.bs.modal', event => {
+                const btn = event.relatedTarget;
+                document.getElementById('userModalName').textContent = btn.dataset.nom;
+
+                const email = btn.dataset.email;
+                const tel = btn.dataset.tel;
+
+                const emailLink = document.getElementById('userModalEmail');
+                emailLink.textContent = email;
+                emailLink.href = 'mailto:' + email;
+
+                const telLink = document.getElementById('userModalTel');
+                telLink.textContent = tel;
+                telLink.href = 'tel:' + tel;
+            });
+
+
 
         });
     </script>

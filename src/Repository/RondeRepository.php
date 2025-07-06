@@ -16,6 +16,22 @@ class RondeRepository extends ServiceEntityRepository
         parent::__construct($registry, Ronde::class);
     }
 
+    /**
+     * Retourne toutes les rondes futures (>= maintenant), triées par date de début ASC.
+     *
+     * @return Ronde[]
+     */
+    public function findFuture(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->where('r.start >= :now')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('r.start', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
     //    /**
     //     * @return Ronde[] Returns an array of Ronde objects
     //     */

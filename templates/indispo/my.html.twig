@@ -103,6 +103,13 @@
                         <button class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="text-muted small mb-2">
+                            Jours :
+                            {% for j in joursRondes %}
+                                <span class="badge bg-light border text-dark">{{ j|date('d/m/Y') }}</span>
+                            {% endfor %}
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Début</label>
@@ -137,32 +144,58 @@
         </div>
     </div>
 {% endblock %}
-
 {% block javascripts %}
     {{ parent() }}
     <script>
+        /* Liste des jours de rondes futures — format "YYYY-MM-DD" */
+        const joursValides = {{ joursRondes|json_encode|raw }};
+
         document.addEventListener('DOMContentLoaded', () => {
-            const toast = new bootstrap.Toast(document.getElementById('okToast'));
-            const modal = new bootstrap.Modal(document.getElementById('indispoModal'));
+
+            /* ---------- éléments ---------- */
+            const toast      = new bootstrap.Toast(document.getElementById('okToast'));
+            const modalEl    = document.getElementById('indispoModal');
+            const modal      = new bootstrap.Modal(modalEl);
             const startInput = document.getElementById('startInput');
-            const endInput = document.getElementById('endInput');
+            const endInput   = document.getElementById('endInput');
+            const pad        = n => n.toString().padStart(2, '0');
 
-            const pad = n => n.toString().padStart(2, '0');
-
-            startInput?.addEventListener('change', () => {
+            /* ---------- helpers ---------- */
+            const setEndPlus30 = () => {
+                if (!startInput.value) return;
                 const s = new Date(startInput.value);
                 if (isNaN(s)) return;
                 const e = new Date(s.getTime() + 30 * 60 * 1000);
                 endInput.value = `${e.getFullYear()}-${pad(e.getMonth() + 1)}-${pad(e.getDate())}T${pad(e.getHours())}:${pad(e.getMinutes())}`;
+            };
+
+            /* ---------- Ouverture de la modale : pré-sélection du 1er jour valide ---------- */
+            modalEl.addEventListener('show.bs.modal', () => {
+                if (!joursValides.length) return;                    // sécurité
+
+                const defaultStart = `${joursValides[0]}T09:00`;     // 09 h 00 par défaut
+                startInput.value   = defaultStart;
+                setEndPlus30();
             });
 
-            // AJOUT
+            /* ---------- Vérifie que le jour choisi appartient à joursValides ---------- */
+            startInput.addEventListener('change', () => {
+                const jour = startInput.value.slice(0, 10);          // "YYYY-MM-DD"
+                if (!joursValides.includes(jour)) {
+                    alert('⚠ Ce jour ne correspond à aucune ronde planifiée. Choisis un jour valide.');
+                    startInput.value = '';
+                    endInput.value   = '';
+                    return;
+                }
+                setEndPlus30();
+            });
+
+            /* ---------- AJOUT indisponibilité ---------- */
             document.getElementById('indispoForm').addEventListener('submit', async e => {
                 e.preventDefault();
-                const fd = new FormData(e.target);
                 const res = await fetch('{{ path("user_indispo_ajax_create") }}', {
-                    method: 'POST',
-                    body: fd,
+                    method : 'POST',
+                    body   : new FormData(e.target),
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (res.ok) {
@@ -172,13 +205,13 @@
                 }
             });
 
-            // SUPPRESSION
+            /* ---------- SUPPRESSION ---------- */
             document.querySelectorAll('.del-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     if (!confirm('Supprimer cette indisponibilité ?')) return;
                     const url = '{{ path("user_indispo_ajax_delete", {id: 0}) }}'.replace('/0/', '/' + btn.dataset.id + '/');
                     const res = await fetch(url, {
-                        method: 'POST',
+                        method : 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
                     if (res.ok) {
