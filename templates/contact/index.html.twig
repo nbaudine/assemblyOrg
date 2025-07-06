@@ -1,0 +1,111 @@
+{# templates/contact/index.html.twig #}
+{% extends 'base.html.twig' %}
+{% block title %}Contacts{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn .4s ease-out both; }
+
+        /* Palette JW : bleu clair ⇾ bleu foncé */
+        :root {
+            --jw-blue:  #0078D4;
+            --jw-dark:  #0055A5;
+            --jw-light: #f0f7ff;
+        }
+
+        .contact-card {
+            border-left: 6px solid var(--jw-blue);
+            border-radius: 1rem;
+            transition: transform .2s, box-shadow .3s;
+            background: #fff;
+        }
+        .contact-card:hover {
+            box-shadow: 0 6px 14px rgba(0,0,0,.08);
+            transform: translateY(-2px);
+        }
+        .contact-icon {
+            background: linear-gradient(135deg,var(--jw-blue),var(--jw-dark));
+            color: #fff;
+            width: 3.2rem; height: 3.2rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: .75rem;
+            font-size: 1.35rem;
+        }
+        .contact-info a { text-decoration: none; }
+        .contact-info a:hover { text-decoration: underline; }
+
+        @media (max-width: 575px) {
+            .contact-card { flex-direction: column; text-align: center; }
+            .contact-icon { margin-bottom: .75rem; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container py-4 fade-in">
+
+        <h1 class="h4 fw-bold mb-4 text-primary">
+            <i class="bi bi-person-lines-fill me-2"></i>Contacts principaux
+        </h1>
+
+        <div class="d-flex flex-column gap-3">
+
+            {# ---------------- Responsable Parking ---------------- #}
+            <div class="contact-card d-flex p-3 align-items-center gap-3 shadow-sm">
+                <div class="contact-icon"><i class="bi bi-car-front-fill"></i></div>
+                <div class="contact-info flex-grow-1">
+                    <div class="fw-semibold">Responsable parking</div>
+                    <div class="small text-muted">Jöel Budzinski</div>
+                    <div class="small">
+                        <a href="tel:+33661059088"><i class="bi bi-telephone me-1"></i>+33 6 62 05 90 88</a> ·
+                    </div>
+                </div>
+            </div>
+
+            {# ---------------- Responsable Rondes ---------------- #}
+            <div class="contact-card d-flex p-3 align-items-center gap-3 shadow-sm">
+                <div class="contact-icon"><i class="bi bi-shield-check"></i></div>
+                <div class="contact-info flex-grow-1">
+                    <div class="fw-semibold">Responsable rondes</div>
+                    <div class="small text-muted">Jean Martin</div>
+                    <div class="small">
+                        <a href="tel:+33769172882"><i class="bi bi-telephone me-1"></i>+33 7 69 17 28 82</a> ·
+                    </div>
+                </div>
+            </div>
+
+
+            {# ---------------- Premier secours ---------------- #}
+            <div class="contact-card d-flex p-3 align-items-center gap-3 shadow-sm">
+                <div class="contact-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+                <div class="contact-info flex-grow-1">
+                    <div class="fw-semibold">Premier secours</div>
+                    <div class="small text-muted">Poste de secours</div>
+                    <div class="small">
+                        <a href="tel:XXX"><i class="bi bi-telephone me-1"></i>XXX (urgence)</a>
+                    </div>
+                </div>
+            </div>
+
+            {# ---------------- Support technique ---------------- #}
+            <div class="contact-card d-flex p-3 align-items-center gap-3 shadow-sm">
+                <div class="contact-icon"><i class="bi bi-tools"></i></div>
+                <div class="contact-info flex-grow-1">
+                    <div class="fw-semibold">Problème technique sur le site</div>
+                    <div class="small text-muted">Support informatique</div>
+                    <div class="small">
+                        <a href="tel:+33651932906"><i class="bi bi-telephone me-1"></i>+33 6 51 93 29 06</a> ·
+                        <a href="mailto:baudinenathan@gmail.com"><i class="bi bi-envelope me-1"></i>baudinenathan@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+{% endblock %}

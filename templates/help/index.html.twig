@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+{% block title %}Aide utilisateur{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn .4s ease-out both; }
+
+        .help-section {
+            background: #fff;
+            border-left: 6px solid #0078D4;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform .2s ease;
+        }
+
+        .help-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .help-icon {
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, #0078D4, #0055A5);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: .75rem;
+            font-size: 1.4rem;
+        }
+
+        .help-header {
+            color: #0055A5;
+            font-weight: bold;
+        }
+
+        @media (max-width: 575px) {
+            .help-section { text-align: center; }
+            .help-icon { margin: 0 auto 1rem; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container py-4 fade-in">
+        <h1 class="h4 fw-bold text-primary mb-4">
+            <i class="bi bi-question-circle me-2"></i>Aide utilisateur
+        </h1>
+
+        <div class="d-flex flex-column gap-4">
+
+            {# Rondes #}
+            <div class="help-section d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div class="help-icon"><i class="bi bi-shield-check"></i></div>
+                <div>
+                    <h2 class="h6 help-header">Les rondes</h2>
+                    <p class="mb-0">Les rondes sont des créneaux où vous êtes assigné à un service. Vous pouvez consulter vos prochaines rondes dans l’onglet <strong>“Mes rondes”</strong>. Elles s'affichent par jour et indiquent les personnes assignées avec vous.</p>
+                </div>
+            </div>
+
+            {# Indisponibilités #}
+            <div class="help-section d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div class="help-icon"><i class="bi bi-clock"></i></div>
+                <div>
+                    <h2 class="h6 help-header">Mes indisponibilités</h2>
+                    <p class="mb-0">Vous pouvez ajouter vos périodes d'indisponibilité pour signaler que vous ne pouvez pas être assigné. Cela aide les responsables à planifier de manière efficace. Allez dans <strong>“Mes indisponibilités”</strong> pour les gérer.</p>
+                </div>
+            </div>
+
+            {# Profil #}
+            <div class="help-section d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div class="help-icon"><i class="bi bi-person-circle"></i></div>
+                <div>
+                    <h2 class="h6 help-header">Modifier mon profil</h2>
+                    <p class="mb-0">Vous pouvez modifier votre prénom, nom, e-mail ou téléphone dans <strong>“Mon profil”</strong>. Vous pouvez également changer votre mot de passe à tout moment.</p>
+                </div>
+            </div>
+
+            {# Problème technique #}
+            <div class="help-section d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div class="help-icon"><i class="bi bi-tools"></i></div>
+                <div>
+                    <h2 class="h6 help-header">Un problème technique ?</h2>
+                    <p class="mb-0">En cas de bug, d’erreur ou de question sur l’utilisation du site, contactez le support via la page <strong><a href="{{ path('app_contact') }}">Contacts</a></strong>. Une personne est dédiée à l'assistance technique.</p>
+                </div>
+            </div>
+
+            {# Confidentialité (optionnel) #}
+            <div class="help-section d-flex flex-column flex-md-row gap-3 align-items-start">
+                <div class="help-icon"><i class="bi bi-shield-lock"></i></div>
+                <div>
+                    <h2 class="h6 help-header">Mes données sont-elles protégées ?</h2>
+                    <p class="mb-0">Oui. Seuls les administrateurs peuvent voir vos données. Aucune information n’est partagée sans votre consentement. Vous pouvez demander la suppression de votre compte à tout moment.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+{% endblock %}

@@ -1,8 +1,31 @@
+{# templates/admin/user/index.html.twig #}
 {% extends 'base.html.twig' %}
 {% block title %}Gestion des utilisateurs{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @media (max-width: 767px) {
+            /* Masque les colonnes détaillées du tableau sur mobile */
+            .col-phone,
+            .col-roles,
+            .col-actions {
+                display: none !important;
+            }
+            /* Affiche un bloc résumé sous le nom/prénom */
+            .user-summary {
+                display: block;
+                font-size: .85rem;
+                color: #6c757d;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
     <main class="container py-4">
+
+        {# ---------- En-tête + bouton ---------- #}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <h1 class="h4 fw-bold text-center text-md-start m-0" style="color:#0055A5;">
                 <i class="bi bi-people me-2"></i>Gestion des utilisateurs
@@ -12,74 +35,105 @@
             </a>
         </div>
 
+        {# ---------- Flash success ---------- #}
         {% for msg in app.flashes('success') %}
             <div class="alert alert-success shadow-sm rounded-3">{{ msg }}</div>
         {% endfor %}
 
-        <!-- Barre de recherche -->
+        {# ---------- Barre de recherche ---------- #}
         <div class="input-group mb-4 shadow-sm rounded-3">
             <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom, email ou téléphone...">
+            <input type="text" id="searchInput" class="form-control"
+                   placeholder="Rechercher par nom, email, téléphone ou rôle…">
         </div>
 
+        {# ---------- Tableau responsive ---------- #}
         <div class="table-responsive shadow-sm rounded-4">
             <table class="table table-hover align-middle mb-0" id="userTable">
                 <thead class="table-primary">
                 <tr>
-                    <th>#</th>
-                    <th>Email</th>
-                    <th>Nom</th>
-                    <th>Téléphone</th>
-                    <th class="text-center">Rôles</th>
-                    <th class="text-end">Actions</th>
+                    <th class="w-50">Utilisateur</th>
+                    <th class="col-phone">Téléphone</th>
+                    <th class="col-roles text-center">Rôles</th>
+                    <th class="col-actions text-end">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for u in users %}
                     <tr>
-                        <td>{{ u.id }}</td>
-                        <td>{{ u.email }}</td>
-                        <td>{{ u.prenom }} {{ u.nom }}</td>
-                        <td>{{ u.telephone ?? '-' }}</td>
-                        <td class="text-center">
+                        {# ===== Colonne Nom / Email & résumé mobile ===== #}
+                        <td>
+                            <div class="fw-semibold">{{ u.prenom }} {{ u.nom }}</div>
+                            <div class="text-muted small">{{ u.email }}</div>
+
+                            {# résumé compact visible seulement sur mobile #}
+                            <div class="user-summary mt-1">
+                                {% if u.telephone %}
+                                    <i class="bi bi-telephone me-1"></i>{{ u.telephone }}<br>
+                                {% endif %}
+                                {% for r in u.roles %}
+                                    <span class="badge bg-secondary">{{ r }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+
+                        {# ===== Téléphone (desktop) ===== #}
+                        <td class="col-phone">{{ u.telephone ?? '-' }}</td>
+
+                        {# ===== Rôles (desktop) ===== #}
+                        <td class="col-roles text-center">
                             {% for r in u.roles %}
                                 <span class="badge bg-secondary">{{ r }}</span>
                             {% endfor %}
                         </td>
-                        <td class="text-end">
-                            <a href="{{ path('admin_users_edit', {id: u.id}) }}" class="btn btn-sm btn-outline-primary me-1" title="Modifier">
+
+                        {# ===== Actions ===== #}
+                        <td class="col-actions text-end">
+                            <a href="{{ path('admin_users_edit', {id: u.id}) }}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ path('admin_users_delete', {id: u.id}) }}" method="post" class="d-inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ u.id) }}">
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cet utilisateur ?')" title="Supprimer">
+                            <form action="{{ path('admin_users_delete', {id: u.id}) }}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('delete-user-' ~ u.id) }}">
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Supprimer cet utilisateur ?')"
+                                        title="Supprimer">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">Aucun utilisateur trouvé.</td></tr>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            Aucun utilisateur trouvé.
+                        </td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
+
     </main>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
+        /* -------- Recherche instantanée -------- */
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('searchInput');
-            const table = document.getElementById('userTable');
-            const rows = table.getElementsByTagName('tr');
+            const input  = document.getElementById('searchInput');
+            const table  = document.getElementById('userTable');
+            const rows   = table.getElementsByTagName('tr');
 
             input.addEventListener('input', function () {
                 const filter = this.value.toLowerCase();
 
+                /* Parcourt toutes les lignes sauf l’entête */
                 for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
+                    const row  = rows[i];
                     const text = row.textContent.toLowerCase();
                     row.style.display = text.includes(filter) ? '' : 'none';
                 }

@@ -66,6 +66,19 @@
                 <i class="bi bi-clock me-2"></i>Mes indisponibilitées
             </a>
         </li>
+        <li>
+            <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+               href="{{ path('app_contact') }}">
+                <i class="bi bi-telephone me-2"></i>Contact
+            </a>
+        </li>
+
+        <li>
+            <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+               href="{{ path('app_help') }}">
+                <i class="bi bi-question-circle me-2"></i>Aide
+            </a>
+        </li>
     </ul>
 
     {% if is_granted('ROLE_ADMIN') %}
@@ -144,6 +157,23 @@
                     <i class="bi bi-clock me-2"></i>Mes indisponibilitées
                 </a>
             </li>
+
+            <li>
+                <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+                   href="{{ path('app_contact') }}">
+                    <i class="bi bi-telephone me-2"></i>Contact
+                </a>
+            </li>
+
+            <li>
+                <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+                   href="{{ path('app_help') }}">
+                    <i class="bi bi-question-circle me-2"></i>Aide
+                </a>
+            </li>
+
+
+
         </ul>
 
         {% if is_granted('ROLE_ADMIN') %}
