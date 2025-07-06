@@ -90,6 +90,23 @@
                         data-bs-toggle="modal" data-bs-target="#rondeModal">
                     <i class="bi bi-plus-circle me-1"></i> Nouvelle ronde
                 </button>
+
+                {# …dans la barre d’actions… #}
+                <form action="{{ path('admin_rondes_reset') }}"
+                      method="post"
+                      class="d-inline">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token('reset-rondes') }}">
+
+                    <button type="submit"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('⚠ Cette action va supprimer toutes les rondes existantes puis recréer le planning par défaut. Continuer ?');">
+                        <i class="bi bi-arrow-repeat me-1"></i> Réinitialiser les rondes
+                    </button>
+                </form>
+
             </div>
         </div>
 
