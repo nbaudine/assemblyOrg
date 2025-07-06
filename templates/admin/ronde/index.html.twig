@@ -120,16 +120,8 @@
                                placeholder="Filtrer…">
 
                         <div class="scroll-box" id="userList">
-                            {% for u in users %}
-                                <div class="form-check checkbox-item"
-                                     data-search="{{ (u.prenom ~ ' ' ~ u.nom ~ ' ' ~ u.email)|lower }}">
-                                    <input class="form-check-input" type="checkbox" value="{{ u.id }}"
-                                           id="u{{ u.id }}" name="users[]">
-                                    <label class="form-check-label" for="u{{ u.id }}">
-                                        {{ u.prenom }} {{ u.nom }} – {{ u.email }}
-                                    </label>
-                                </div>
-                            {% endfor %}
+                            {# La liste sera chargée dynamiquement via AJAX selon le créneau choisi #}
+                            <div class="text-muted small">Sélectionnez un créneau pour afficher les utilisateurs disponibles…</div>
                         </div>
                     </div>
 
@@ -169,7 +161,8 @@
             const startInp  = document.getElementById('start');
             const endInp    = document.getElementById('end');
             const searchInp = document.getElementById('userSearch');
-            const cbItems   = document.querySelectorAll('#userList .checkbox-item');
+            const userList  = document.getElementById('userList');
+            let cbItems     = userList.querySelectorAll('.checkbox-item');
 
             /* =================  AUTO +30min  ============== */
             startInp.addEventListener('change', () => {
@@ -177,7 +170,9 @@
                 const d = new Date(startInp.value); d.setMinutes(d.getMinutes()+30);
                 const pad = n=>n.toString().padStart(2,'0');
                 endInp.value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                refreshUserList();
             });
+            endInp.addEventListener('change', refreshUserList);
 
             /* =================  FILTRE USERS   ============ */
             searchInp.addEventListener('input', () => {
@@ -187,11 +182,45 @@
                 });
             });
 
+            /* =========  CHARGE LISTE USERS DISPO ========= */
+            async function refreshUserList(selectedIds = []){
+                const start = startInp.value;
+                const end   = endInp.value;
+                if(!start || !end) return;
+
+                userList.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm" role="status"></div></div>';
+
+                const url = '{{ path("admin_rondes_form") }}?start='+encodeURIComponent(start)+'&end='+encodeURIComponent(end);
+                try{
+                    const resp = await fetch(url,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+                    if(!resp.ok) throw new Error();
+                    const html = await resp.text();
+                    userList.innerHTML = html;
+                    cbItems = userList.querySelectorAll('.checkbox-item');
+
+                    // réapplique le filtre de recherche
+                    searchInp.dispatchEvent(new Event('input'));
+
+                    // re-check ids si besoin (édition)
+                    if(selectedIds.length){
+                        selectedIds.forEach(id=>{
+                            const inp = userList.querySelector(`input[value="${id}"]`);
+                            if(inp) inp.checked = true;
+                        });
+                    }
+
+                }catch(e){
+                    userList.innerHTML = '<div class="text-danger small">Erreur de chargement.</div>';
+                }
+            }
+
             /* =================  NOUVELLE RONDE  ============ */
             document.getElementById('btnNew').addEventListener('click',() => {
                 form.reset();
                 document.getElementById('rondeId').value='';
                 document.getElementById('modalTitle').textContent='Nouvelle ronde';
+                userList.innerHTML = '<div class="text-muted small">Sélectionnez un créneau pour afficher les utilisateurs disponibles…</div>';
+                cbItems = userList.querySelectorAll('.checkbox-item');
             });
 
             /* =================  EDIT RONDE   ============== */
@@ -204,9 +233,8 @@
                     endInp.value  =btn.dataset.end;
 
                     const ids = btn.dataset.users.split(',');
-                    cbItems.forEach(ci=>{
-                        ci.querySelector('input').checked = ids.includes(ci.querySelector('input').value);
-                    });
+                    // charge utilisateurs puis re-check ceux de la ronde
+                    refreshUserList(ids);
                 });
             });
 

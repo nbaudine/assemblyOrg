@@ -48,9 +48,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Ronde::class, mappedBy: 'sesUsers')]
     private Collection $rondes;
 
+    /**
+     * @var Collection<int, Indisponibilite>
+     */
+    #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'user')]
+    private Collection $indisponibilites;
+
     public function __construct()
     {
         $this->rondes = new ArrayCollection();
+        $this->indisponibilites = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -192,6 +199,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->rondes->removeElement($ronde)) {
             $ronde->removeSesUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Indisponibilite>
+     */
+    public function getIndisponibilites(): Collection
+    {
+        return $this->indisponibilites;
+    }
+
+    public function addIndisponibilite(Indisponibilite $indisponibilite): static
+    {
+        if (!$this->indisponibilites->contains($indisponibilite)) {
+            $this->indisponibilites->add($indisponibilite);
+            $indisponibilite->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIndisponibilite(Indisponibilite $indisponibilite): static
+    {
+        if ($this->indisponibilites->removeElement($indisponibilite)) {
+            // set the owning side to null (unless already changed)
+            if ($indisponibilite->getUser() === $this) {
+                $indisponibilite->setUser(null);
+            }
         }
 
         return $this;

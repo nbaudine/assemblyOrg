@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes indisponibilités{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .badge-periode{background:#0078D4;color:#fff;border-radius:.5rem;padding:.2rem .6rem;font-size:.75rem}
+        .card-i{transition:background .2s;border-left:5px solid #0078D4}
+        .card-i:hover{background:#f0f7ff}
+        .toast-container{position:fixed;top:1rem;right:1rem;z-index:1080}
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4 fw-bold text-primary"><i class="bi bi-person-x me-2"></i>Mes indisponibilités</h1>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#indispoModal">
+                <i class="bi bi-plus-circle me-1"></i> Ajouter
+            </button>
+        </div>
+
+        {% if indispos is empty %}
+            <div class="alert alert-info text-center"><i class="bi bi-info-circle me-1"></i>Aucune indisponibilité à venir.</div>
+        {% else %}
+            {% for i in indispos %}
+                <div class="card card-i mb-2 shadow-sm border-0 rounded-4">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge-periode">{{ i.start|date('d/m/Y H:i') }} → {{ i.end|date('d/m/Y H:i') }}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger del-btn" data-id="{{ i.id }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </main>
+
+    {# ---------- Modal ajout ---------- #}
+    <div class="modal fade" id="indispoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form id="indispoForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-calendar-plus me-2 text-primary"></i>Ajouter une indisponibilité</h5>
+                        <button class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Début</label>
+                                <input type="datetime-local" name="start" id="startInput" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fin</label>
+                                <input type="datetime-local" name="end" id="endInput" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-check-circle me-1"></i>Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# ---------- Toast notification ---------- #}
+    <div class="toast-container">
+        <div id="okToast" class="toast text-bg-success border-0">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>Opération réussie</div>
+                <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toast = new bootstrap.Toast(document.getElementById('okToast'));
+            const modal = new bootstrap.Modal(document.getElementById('indispoModal'));
+            const startInput = document.getElementById('startInput');
+            const endInput   = document.getElementById('endInput');
+
+            const pad = n => n.toString().padStart(2, '0');
+
+            startInput?.addEventListener('change', () => {
+                const s = new Date(startInput.value);
+                if (isNaN(s)) return;
+                const e = new Date(s.getTime() + 30 * 60 * 1000);
+                endInput.value = `${e.getFullYear()}-${pad(e.getMonth() + 1)}-${pad(e.getDate())}T${pad(e.getHours())}:${pad(e.getMinutes())}`;
+            });
+
+            // AJOUT
+            document.getElementById('indispoForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const res = await fetch('{{ path("user_indispo_ajax_create") }}', {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (res.ok) {
+                    toast.show();
+                    modal.hide();
+                    setTimeout(() => location.reload(), 800);
+                }
+            });
+
+            // SUPPRESSION
+            document.querySelectorAll('.del-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Supprimer cette indisponibilité ?')) return;
+                    const url = '{{ path("user_indispo_ajax_delete", {id: 0}) }}'.replace('/0/', '/' + btn.dataset.id + '/');
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (res.ok) {
+                        toast.show();
+                        setTimeout(() => location.reload(), 800);
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

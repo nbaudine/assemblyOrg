@@ -55,15 +55,15 @@
             </a>
         </li>
         <li>
-            <a class="nav-link {% if app.request.get('_route') starts with 'cartes' %}active{% endif %}"
-               href="{{ path('cartes_index') }}">
-                <i class="bi bi-map me-2"></i>Cartes
+            <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+               href="{{ path('user_my_rounds') }}">
+                <i class="bi bi-shield-check me-2"></i>Rondes
             </a>
         </li>
         <li>
             <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-               href="{{ path('user_my_rounds') }}">
-                <i class="bi bi-shield-check me-2"></i>Rondes
+               href="{{ path('user_indispo_index') }}">
+                <i class="bi bi-clock me-2"></i>Mes indisponibilitées
             </a>
         </li>
     </ul>
@@ -133,15 +133,15 @@
                 </a>
             </li>
             <li>
-                <a class="nav-link {% if app.request.get('_route') starts with 'cartes' %}active{% endif %}"
-                   href="{{ path('cartes_index') }}">
-                    <i class="bi bi-map me-2"></i>Cartes
+                <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+                   href="{{ path('user_my_rounds') }}">
+                    <i class="bi bi-shield-check me-2"></i>Rondes
                 </a>
             </li>
             <li>
                 <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
-                   href="{{ path('user_my_rounds') }}">
-                    <i class="bi bi-shield-check me-2"></i>Rondes
+                   href="{{ path('user_indispo_index') }}">
+                    <i class="bi bi-clock me-2"></i>Mes indisponibilitées
                 </a>
             </li>
         </ul>

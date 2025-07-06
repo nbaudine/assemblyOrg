@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Ronde;
 use App\Entity\User;
+use App\Repository\IndisponibiliteRepository;
 use App\Repository\RondeRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -44,12 +45,35 @@ class AdminRondeController extends AbstractController
             return $this->redirectToRoute('admin_rondes_index');
         }
 
+
+
         return $this->render('admin/ronde/form.html.twig', [
             'ronde' => $ronde,
             'edit'  => false,
             'users' => $userRepo->findAll(),
         ]);
     }
+
+    // AdminRondeController.php
+
+    #[Route('/admin/rondes/form', name: 'admin_rondes_form', methods: ['GET'])]
+    public function getRondeForm(Request $request, UserRepository $userRepo, IndisponibiliteRepository $indispoRepo): Response
+    {
+        $start = new \DateTime($request->query->get('start'));
+        $end   = new \DateTime($request->query->get('end'));
+
+        $indispoUserIds = $indispoRepo->findUsersIndisponiblesBetween($start, $end);
+        $usersDispo = $userRepo->createQueryBuilder('u')
+            ->where('u.id NOT IN (:ids)')
+            ->setParameter('ids', $indispoUserIds ?: [0]) // sécurité : éviter IN ()
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('admin/partials/_user_list.html.twig', [
+            'users' => $usersDispo,
+        ]);
+    }
+
 
     #[Route('/{id}/edit', name: 'admin_rondes_edit', methods: ['GET', 'POST'])]
     public function edit(Ronde $ronde, Request $req, EntityManagerInterface $em, UserRepository $userRepo): Response

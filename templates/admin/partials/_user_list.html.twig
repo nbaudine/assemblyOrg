@@ -1,0 +1,10 @@
+{% for u in users %}
+    <div class="form-check checkbox-item"
+         data-search="{{ (u.prenom ~ ' ' ~ u.nom ~ ' ' ~ u.email)|lower }}">
+        <input class="form-check-input" type="checkbox" value="{{ u.id }}"
+               id="u{{ u.id }}" name="users[]">
+        <label class="form-check-label" for="u{{ u.id }}">
+            {{ u.prenom }} {{ u.nom }} – {{ u.email }}
+        </label>
+    </div>
+{% endfor %}
