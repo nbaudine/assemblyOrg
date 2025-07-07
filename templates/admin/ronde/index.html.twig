@@ -371,9 +371,14 @@
                     toast.show();
                     modal.hide();
                     setTimeout(()=>location.reload(),800);
-                }else{
-                    alert('Erreur serveur, vérifiez les champs.');
-                }
+                } else {
+                let message = resp.statusText;
+                try {
+                    const json = await resp.json();
+                    if (json.error) message = json.error;
+                } catch (e) {}
+                alert('Erreur serveur : ' + message);
+            }
             });
 
             // Initialisation tooltip (desktop)

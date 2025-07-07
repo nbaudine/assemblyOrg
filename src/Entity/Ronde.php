@@ -42,7 +42,7 @@ class Ronde
         return $this->start;
     }
 
-    public function setStart(\DateTime $start): static
+    public function setStart(\DateTimeInterface $start): self
     {
         $this->start = $start;
 
