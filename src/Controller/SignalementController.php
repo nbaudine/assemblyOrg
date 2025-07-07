@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Entity\Signalement;
+use App\Repository\SignalementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -64,6 +65,26 @@ class SignalementController extends AbstractController
 
         return $this->render('signalement/new.html.twig', [
             'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/signalements/carte', name: 'signalement_map')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function carte(SignalementRepository $repo): Response
+    {
+        // On transforme les entités en tableau “prêt à consommer” côté JS
+        $signalements = array_map(static function ($s) {
+            return [
+                'lat'         => $s->getLatitude(),
+                'lon'         => $s->getLongitude(),
+                'type'        => $s->getType(),
+                'description' => $s->getDescription(),
+            ];
+        }, $repo->findAll());
+
+
+        return $this->render('signalement/map.html.twig', [
+            'signalements' => $signalements,
         ]);
     }
 }

@@ -87,6 +87,7 @@
             <hr class="my-3 menu-sep">
             <div class="menu-title text-uppercase fw-bold opacity-75 mb-2">Administration</div>
             <ul class="nav nav-pills flex-column gap-2">
+                <li><a class="nav-link {% if app.request.get('_route') starts with 'signalement_map' %}active{% endif %}" href="{{ path('signalement_map') }}"><i class="bi bi-flag me-2"></i>Signalements</a></li>
                 <li><a class="nav-link {% if app.request.get('_route') starts with 'admin_rondes' %}active{% endif %}" href="{{ path('admin_rondes_index') }}"><i class="bi bi-tools me-2"></i>Gestion des rondes</a></li>
                 <li><a class="nav-link {% if app.request.get('_route') starts with 'admin_users' %}active{% endif %}" href="{{ path('admin_users_index') }}"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
             </ul>
@@ -134,6 +135,7 @@
                 <hr class="menu-sep my-2">
                 <div class="menu-title text-uppercase fw-bold opacity-75 mb-2">Administration</div>
                 <ul class="nav flex-column gap-2 mb-3">
+                    <li><a class="nav-link {% if app.request.get('_route') starts with 'signalement_map' %}active{% endif %}" href="{{ path('signalement_map') }}"><i class="bi bi-flag me-2"></i>Signalements</a></li>
                     <li><a class="nav-link {% if app.request.get('_route') starts with 'admin_rondes' %}active{% endif %}" href="{{ path('admin_rondes_index') }}"><i class="bi bi-tools me-2"></i>Gestion des rondes</a></li>
                     <li><a class="nav-link {% if app.request.get('_route') starts with 'admin_users' %}active{% endif %}" href="{{ path('admin_users_index') }}"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
                 </ul>

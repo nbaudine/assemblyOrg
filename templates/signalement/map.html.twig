@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte des signalements{% endblock %}
+
+{# ——— Feuilles de style ——— #}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { width:100%; height:calc(100vh - 140px); }
+        @media (min-width:768px){ #map{ height:80vh; } }
+
+        .leaflet-popup-content-wrapper{ border-radius:12px; }
+        .leaflet-popup-tip{ display:none; }
+    </style>
+{% endblock %}
+
+
+
+{# ——— Contenu ——— #}
+{% block body %}
+    <div class="container-fluid px-0">
+        <div id="map"></div>
+    </div>
+{% endblock %}
+
+{# ——— Scripts ——— #}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        /* --------------------------------------------------------------------
+  *  Carte Leaflet – affichage des signalements
+  * ------------------------------------------------------------------ */
+
+        const reports = {{ signalements|json_encode|raw }};   // injecté depuis Symfony
+
+        /* Palette : une couleur par type ----------------------------------- */
+        const colorByType = {
+            fenetre:      '#0d6efd',  // bleu
+            stationnement:'#fd7e14',  // orange
+            intrusion:    '#dc3545',  // rouge
+            porte:        '#6f42c1',  // violet
+            alarme:       '#d63384',  // rose
+            autre:        '#6c757d'   // gris
+        };
+
+        /* Helpers ----------------------------------------------------------- */
+        const cap = s => {
+            if (!s) return '';
+            s = String(s);
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        };
+        const esc = s => {
+            if (!s) return '';
+            return (new DOMParser().parseFromString(String(s), 'text/html')).body.textContent;
+        };
+
+        /* Carte ------------------------------------------------------------- */
+        const map = L.map('map', { zoomControl:false });
+        L.control.zoom({ position:'bottomright' }).addTo(map);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            maxZoom:19,
+            attribution:'&copy; OpenStreetMap'
+        }).addTo(map);
+
+        const markers = [];
+
+        /* Marqueurs --------------------------------------------------------- */
+        reports.forEach(r => {
+            const safeType = r.type ? r.type.toLowerCase() : 'autre';
+            const color    = colorByType[safeType] || colorByType.autre;
+
+            const marker = L.circleMarker([r.lat, r.lon], {
+                radius:10,
+                color,
+                fillColor:color,
+                fillOpacity:0.85,
+                weight:2
+            }).addTo(map);
+
+            marker.bindPopup(`
+        <div class="fw-bold mb-1">${cap(safeType)}</div>
+        <div>${esc(r.description)}</div>
+    `);
+
+            markers.push(marker);
+        });
+
+        /* Centrage intelligent --------------------------------------------- */
+        if (markers.length) {
+            map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
+        } else {
+            map.setView([46.16, -1.15], 10);   // La Rochelle par défaut
+        }
+
+        /* Position de l’utilisateur (non bloquante) ------------------------ */
+        map.locate({ setView:false, watch:false, maxZoom:16, timeout:5000 })
+            .on('locationfound', e => {
+                L.circleMarker(e.latlng, {
+                    radius:8, color:'#198754', fillColor:'#198754', fillOpacity:0.9
+                }).addTo(map).bindPopup('Vous êtes ici');
+            });
+
+        /* Légende couleurs -------------------------------------------------- */
+        const legend = L.control({ position:'topright' });
+        legend.onAdd = () => {
+            const div = L.DomUtil.create('div', 'bg-white p-2 rounded shadow');
+            div.innerHTML = Object.entries(colorByType).map(
+                ([key, col]) => `
+            <div class="d-flex align-items-center mb-1">
+                <span style="width:12px;height:12px;background:${col};
+                             border-radius:50%;display:inline-block;margin-right:6px"></span>
+                ${cap(key)}
+            </div>`
+            ).join('');
+            return div;
+        };
+        legend.addTo(map);
+
+    </script>
+{% endblock %}
+
