@@ -1,0 +1,167 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signaler un problème{% endblock %}
+
+{% block body %}
+    <div class="container my-5" style="max-width: 700px;">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <h1 class="text-center mb-4 fw-bold text-danger">📍 Signaler ma position</h1>
+
+                <p class="lead text-center text-muted">
+                    Pour que nous puissions traiter votre signalement avec efficacité,<br>merci d’autoriser l’accès à votre position.
+                </p>
+
+                <div class="alert alert-info border-0 rounded-3 shadow-sm">
+                    <strong>Pourquoi c’est important ?</strong>
+                    <ul class="mb-0">
+                        <li>📌 Localisation rapide et précise</li>
+                        <li>✍️ Aucune saisie manuelle nécessaire</li>
+                        <li>⏱️ Traitement prioritaire de votre signalement</li>
+                    </ul>
+                </div>
+
+                <div class="text-center my-4">
+                    <button class="btn btn-danger btn-lg px-4" onclick="getLocation()" id="locate-btn">
+                        📡 Activer la localisation
+                    </button>
+                    <div id="result" class="mt-3 fw-bold text-success"></div>
+                    <div id="spinner" class="text-center mt-2" style="display: none;">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </div>
+                </div>
+
+                {{ form_start(form) }}
+
+                <div class="row g-3" style="display: none">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Latitude</label>
+                        <div class="input-group">
+                            <span class="input-group-text">🧭</span>
+                            {{ form_widget(form.latitude, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Longitude</label>
+                        <div class="input-group">
+                            <span class="input-group-text">🧭</span>
+                            {{ form_widget(form.longitude, {'attr': {'class': 'form-control'}}) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold d-block">{{ form_label(form.type) }}</label>
+
+                    {# On construit un « btn-group » responsive #}
+                    <div class="btn-group flex-wrap" role="group" aria-label="Type de problème">
+                        {% for choice in form.type %}
+                            {# L’input radio invisible (btn-check) #}
+                            {{ form_widget(choice, {
+                                'attr': {
+                                    'class': 'btn-check',
+                                    'autocomplete': 'off'
+                                }
+                            }) }}
+
+                            {# Le label stylé comme un bouton Bootstrap #}
+                            <label class="btn btn-outline-primary me-2 mb-2" for="{{ choice.vars.id }}">
+                                {{ choice.vars.label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                    {{ form_errors(form.type) }}
+                </div>
+
+                <div class="mt-4">
+                    <label class="form-label fw-semibold">Description du problème</label>
+                    {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+                </div>
+
+                <div class="text-end mt-4">
+                    <button class="btn btn-success btn-lg px-4">
+                        🚀 Envoyer le signalement
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getLocation () {
+            const result    = document.getElementById('result');
+            const spinner   = document.getElementById('spinner');
+            const locateBtn = document.getElementById('locate-btn');
+
+            result.textContent  = '';
+            spinner.style.display = 'block';
+
+            locateBtn.disabled = true;                 // évite les doubles clics
+            locateBtn.classList.remove('btn-success'); // on repart d'une base neutre
+            locateBtn.classList.add('btn-danger');
+            locateBtn.innerHTML = '📡 Recherche en cours…';
+
+            if (!navigator.geolocation) {
+                result.textContent = '❌ Votre navigateur ne supporte pas la géolocalisation.';
+                resetButton();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    // Affichage de la position
+
+
+                    // Remplit les champs cachés du formulaire
+                    document.getElementById('{{ form.latitude.vars.id }}').value = lat;
+                    document.getElementById('{{ form.longitude.vars.id }}').value = lon;
+
+                    // --- Mise à jour du bouton ---
+                    spinner.style.display = 'none';
+                    locateBtn.disabled = true;                      // on le fige
+                    locateBtn.classList.remove('btn-danger');
+                    locateBtn.classList.add('btn-success');
+                    locateBtn.innerHTML = '✅ Localisation récupérée';
+                },
+                function (error) {
+                    let msg;
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            msg = '⚠️ Autorisation refusée. Merci d’accepter la géolocalisation.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            msg = '⚠️ Position indisponible.';
+                            break;
+                        case error.TIMEOUT:
+                            msg = '⚠️ Délai dépassé. Veuillez réessayer.';
+                            break;
+                        default:
+                            msg = '⚠️ Erreur inconnue.';
+                    }
+                    result.textContent = msg;
+                    resetButton();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+
+            // Remet le bouton à son état initial (rouge) après une erreur
+            function resetButton () {
+                spinner.style.display = 'none';
+                locateBtn.disabled = false;
+                locateBtn.classList.remove('btn-success');
+                locateBtn.classList.add('btn-danger');
+                locateBtn.innerHTML = '📡 Activer la localisation';
+            }
+        }
+
+        // Déclenche automatiquement à l’ouverture de la page
+        document.addEventListener('DOMContentLoaded', () => getLocation());
+    </script>
+
+{% endblock %}

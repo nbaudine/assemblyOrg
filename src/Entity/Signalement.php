@@ -33,7 +33,10 @@ class Signalement
     private ?string $statut = null;
 
     #[ORM\ManyToOne(inversedBy: 'signalements')]
-    private ?User $createdBy = null;
+    private ?User $user = null;
+
+    #[ORM\Column]
+    private ?\DateTime $CreatedAt = null;
 
     public function getId(): ?int
     {
@@ -112,14 +115,26 @@ class Signalement
         return $this;
     }
 
-    public function getCreatedBy(): ?User
+    public function getUser(): ?User
     {
-        return $this->createdBy;
+        return $this->user;
     }
 
-    public function setCreatedBy(?User $createdBy): static
+    public function setUser(?User $user): static
     {
-        $this->createdBy = $createdBy;
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTime
+    {
+        return $this->CreatedAt;
+    }
+
+    public function setCreatedAt(\DateTime $CreatedAt): static
+    {
+        $this->CreatedAt = $CreatedAt;
 
         return $this;
     }
