@@ -9,10 +9,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Réinitialise toutes les rondes : purge + recréation du planning.
  */
+#[IsGranted('ROLE_ADMIN')]
+
 final class RondeResetController extends AbstractController
 {
     #[Route(

@@ -224,44 +224,51 @@ class AdminRondeController extends AbstractController
         IndisponibiliteRepository  $indispoRepository,
         EntityManagerInterface     $em
     ): Response {
-        // 1) Toutes les rondes, triées par date la plus proche d'abord
         $rondes = $rondeRepository->findBy([], ['start' => 'ASC']);
+        $users  = $userRepository->findAll();
 
-        // 2) Tous les utilisateurs + compteur de participations courantes
-        $users      = $userRepository->findAll();
-        $userLoad   = [];                        // [id => nbParticipations]
+        // Préparation des charges
+        $userLoad = []; // [id => nbParticipations]
         foreach ($users as $u) {
             $userLoad[$u->getId()] = $u->getRondes()->count();
         }
 
-        // 3) Parcours de chaque ronde à compléter
         foreach ($rondes as $ronde) {
             while ($ronde->getSesUsers()->count() < 2) {
-                // 3-a) Filtrer les utilisateurs disponibles pendant ce créneau
-                $available = array_filter(
-                    $users,
-                    fn(User $u) =>
-                        !$ronde->getSesUsers()->contains($u) &&
-                        !$indispoRepository->isUserUnavailableDuring($u, $ronde->getStart(), $ronde->getEnd())
-                );
+                $start = $ronde->getStart();
+                $end   = $ronde->getEnd();
+                $jour  = $start->format('Y-m-d');
+
+                // Liste des candidats valides
+                $available = array_filter($users, function (User $u) use ($ronde, $indispoRepository, $start, $end, $jour) {
+                    // déjà affecté à cette ronde
+                    if ($ronde->getSesUsers()->contains($u)) return false;
+
+                    // indispo ?
+                    if ($indispoRepository->isUserUnavailableDuring($u, $start, $end)) return false;
+
+                    // a déjà une autre ronde ce jour-là ?
+                    foreach ($u->getRondes() as $r) {
+                        if ($r !== $ronde && $r->getStart()->format('Y-m-d') === $jour) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
 
                 if (!$available) {
-                    // Aucun candidat disponible : on laisse le créneau partiellement rempli
-                    break;
+                    break; // pas de candidats valides
                 }
 
-                // 3-b) Trier les candidats par charge croissante
-                usort(
-                    $available,
-                    fn(User $a, User $b) =>
-                        $userLoad[$a->getId()] <=> $userLoad[$b->getId()]
+                // Trie les candidats par charge croissante
+                usort($available, fn(User $a, User $b) =>
+                    $userLoad[$a->getId()] <=> $userLoad[$b->getId()]
                 );
 
-                // 3-c) On prend le 1er (le moins chargé)
+                // Choisit le moins chargé
                 $chosen = $available[0];
                 $ronde->addSesUser($chosen);
-
-                // 3-d) Mise à jour immédiate du compteur !
                 $userLoad[$chosen->getId()]++;
             }
 
