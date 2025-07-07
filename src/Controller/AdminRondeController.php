@@ -93,23 +93,97 @@ class AdminRondeController extends AbstractController
 
     // AdminRondeController.php
 
-    #[Route('/admin/rondes/form', name: 'admin_rondes_form', methods: ['GET'])]
-    public function getRondeForm(Request $request, UserRepository $userRepo, IndisponibiliteRepository $indispoRepo): Response
-    {
-        $start = new \DateTime($request->query->get('start'));
-        $end   = new \DateTime($request->query->get('end'));
+// … namespace & use déjà présents …
 
-        $indispoUserIds = $indispoRepo->findUsersIndisponiblesBetween($start, $end);
-        $usersDispo = $userRepo->createQueryBuilder('u')
-            ->where('u.id NOT IN (:ids)')
-            ->setParameter('ids', $indispoUserIds ?: [0]) // sécurité : éviter IN ()
+    /* ================================================================
+     * 1) LISTE AJAX DES UTILISATEURS DISPONIBLES
+     *    - exclus : indispos + déjà pris le même jour
+     *    - triés : par nombre total de participations (croissant)
+     * ================================================================ */
+    #[Route('/admin/rondes/form', name: 'admin_rondes_form', methods: ['GET'])]
+    public function getRondeForm(
+        Request                    $request,
+        UserRepository             $userRepo,
+        RondeRepository            $rondeRepo,
+        IndisponibiliteRepository  $indispoRepo,
+        EntityManagerInterface     $em
+    ): Response {
+        $start = new \DateTimeImmutable($request->query->get('start'));
+        $end   = new \DateTimeImmutable($request->query->get('end'));
+        $dayStart = $start->setTime(0, 0, 0);
+        $dayEnd   = $dayStart->modify('+1 day');
+
+        // ID ronde (si édition)
+        $rondeId = $request->query->get('id');
+        $ronde = $rondeId ? $rondeRepo->find($rondeId) : null;
+        $currentUsers = $ronde ? $ronde->getSesUsers()->map(fn($u) => $u->getId())->toArray() : [];
+
+        // exclusions (indispos + déjà sur une ronde ce jour-là) SAUF ceux déjà assignés
+        $indispoIds = $indispoRepo->findUsersIndisponiblesBetween($start, $end);
+        $busyIds = $rondeRepo->createQueryBuilder('r')
+            ->select('DISTINCT u.id')
+            ->join('r.sesUsers', 'u')
+            ->where('r.start >= :dayStart')
+            ->andWhere('r.start < :dayEnd')
+            ->setParameter('dayStart', $dayStart)
+            ->setParameter('dayEnd', $dayEnd)
             ->getQuery()
-            ->getResult();
+            ->getSingleColumnResult();
+
+        $exclude = array_diff(array_unique(array_merge($indispoIds, $busyIds)), $currentUsers);
+
+        // récupère TOUS les utilisateurs non exclus + ceux de la ronde courante
+        $qb = $userRepo->createQueryBuilder('u')
+            ->leftJoin('u.rondes', 'rPart')
+            ->addSelect('COUNT(rPart.id) AS HIDDEN nb')
+            ->groupBy('u.id')
+            ->orderBy('nb', 'ASC')
+            ->addOrderBy('u.nom', 'ASC');
+
+        if (!empty($exclude)) {
+            $qb->where($qb->expr()->notIn('u.id', ':ex'))
+                ->setParameter('ex', $exclude);
+        }
+
+        $users = $qb->getQuery()->getResult();
 
         return $this->render('admin/partials/_user_list.html.twig', [
-            'users' => $usersDispo,
+            'users' => $users,
         ]);
     }
+
+
+    /* ================================================================
+     * 2) HYDRATE UNE RONDE À PARTIR DE LA REQUÊTE
+     *    - applique la règle « 1 créneau / jour / user »
+     * ================================================================ */
+    private function hydrate(Ronde $ronde, Request $req, UserRepository $userRepo): void
+    {
+        $start = new \DateTimeImmutable($req->request->get('start'));
+        $end   = new \DateTimeImmutable($req->request->get('end'));
+        $ronde->setStart($start)->setEnd($end);
+
+        // ------------------ gestion ManyToMany ------------
+        $ronde->getSesUsers()->clear();
+        $idsDemandes = $req->request->all('users') ?? [];
+        foreach ($idsDemandes as $id) {
+            if (!$user = $userRepo->find($id)) {
+                continue;                                     // id invalide
+            }
+
+            // Vérifie s'il possède déjà une ronde le même jour
+            $hasSameDay = $user->getRondes()->exists(
+                fn($key, Ronde $r) =>
+                    $r !== $ronde &&
+                    $r->getStart()->format('Y-m-d') === $start->format('Y-m-d')
+            );
+
+            if (!$hasSameDay) {
+                $ronde->addSesUser($user);
+            }
+        }
+    }
+
 
 
     #[Route('/{id}/edit', name: 'admin_rondes_edit', methods: ['GET', 'POST'])]
@@ -142,21 +216,6 @@ class AdminRondeController extends AbstractController
     }
 
     /** Remplit l’entité Ronde depuis la requête */
-    private function hydrate(Ronde $ronde, Request $req, UserRepository $userRepo): void
-    {
-        $start = new \DateTime($req->request->get('start'));
-        $end   = new \DateTime($req->request->get('end'));
-        $ronde->setStart($start)->setEnd($end);
-
-        // gestion ManyToMany
-        $ids = $req->request->all('users') ?? [];
-        $ronde->getSesUsers()->clear();
-        foreach ($ids as $id) {
-            if ($user = $userRepo->find($id)) {
-                $ronde->addSesUser($user);
-            }
-        }
-    }
 
     #[Route('/admin/rondes/fill', name: 'admin_rondes_fill')]
     public function fillRondes(

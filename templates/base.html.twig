@@ -116,14 +116,16 @@
 <div class="d-md-none position-fixed top-0 start-0 w-100 bg-white shadow-sm z-3">
     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
         <span class="fw-bold" style="color:#0055A5;">JW - Parking</span>
-        <button class="btn btn-outline-primary btn-sm" type="button"
-                data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
-            <i class="bi bi-list fs-4"></i>
-        </button>
+        {% if is_granted('ROLE_USER') %}
+            <button class="btn btn-outline-primary btn-sm" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        {% endif %}
     </div>
 </div>
-{% if is_granted('ROLE_USER') %}
 
+{% if is_granted('ROLE_USER') %}
 <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="offcanvasMenu">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title">Menu</h5>
@@ -152,14 +154,14 @@
                 </a>
             </li>
             <li>
-                <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+                <a class="nav-link {% if app.request.get('_route') starts with 'indisponibilitées' %}active{% endif %}"
                    href="{{ path('user_indispo_index') }}">
                     <i class="bi bi-clock me-2"></i>Mes indisponibilitées
                 </a>
             </li>
 
             <li>
-                <a class="nav-link {% if app.request.get('_route') starts with 'rondes' %}active{% endif %}"
+                <a class="nav-link {% if app.request.get('_route') starts with 'contact' %}active{% endif %}"
                    href="{{ path('app_contact') }}">
                     <i class="bi bi-telephone me-2"></i>Contact
                 </a>
