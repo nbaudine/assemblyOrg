@@ -151,40 +151,63 @@ class AdminRondeController extends AbstractController
 
     #[Route('/fill', name: 'admin_rondes_fill')]
     public function fillRondes(
-        RondeRepository            $rondeRepository,
-        UserRepository             $userRepository,
-        IndisponibiliteRepository  $indispoRepository,
+        RondeRepository            $rondeRepo,
+        UserRepository             $userRepo,
+        IndisponibiliteRepository  $indispoRepo,
         EntityManagerInterface     $em
     ): Response {
-        $rondes = $rondeRepository->findBy([], ['start' => 'ASC']);
-        $users  = $userRepository->findAll();
 
-        $userLoad = []; // [id => nbParticipations]
+        $rondes = $rondeRepo->findBy([], ['start' => 'ASC']);
+        $users  = $userRepo->findAll();
+
+        /* ----------- charge le nombre de participations par user ------------ */
+        $userLoad = [];                // [id => nbParticipations]
         foreach ($users as $u) {
             $userLoad[$u->getId()] = $u->getRondes()->count();
         }
 
-        foreach ($rondes as $ronde) {
-            while ($ronde->getSesUsers()->count() < 2) {
-                $start = $ronde->getStart();
-                $end   = $ronde->getEnd();
-                $jour  = $start->format('Y-m-d');
+        /* ----------- nouvelle structure : users déjà pris par date ---------- */
+        $assignedByDay = [];           // ['2025-07-11' => [3,7,12], …]
 
-                $available = array_filter($users, function (User $u) use ($ronde, $indispoRepository, $start, $end, $jour) {
+        foreach ($rondes as $ronde) {
+            $start = $ronde->getStart();
+            $end   = $ronde->getEnd();
+            $jour  = $start->format('Y-m-d');
+
+            if (!isset($assignedByDay[$jour])) {
+                // initialise une liste avec les users qui ont (déjà) une ronde ce jour en base
+                $assignedByDay[$jour] = $rondeRepo->createQueryBuilder('r')
+                    ->select('DISTINCT u.id')
+                    ->join('r.sesUsers', 'u')
+                    ->where('r.start >= :dayStart')
+                    ->andWhere('r.start <  :dayEnd')
+                    ->setParameter('dayStart', (clone $start)->setTime(0, 0))
+                    ->setParameter('dayEnd',   (clone $start)->setTime(0, 0)->modify('+1 day'))
+                    ->getQuery()
+                    ->getSingleColumnResult();
+            }
+
+            /* ------------ on remplit jusqu’à 2 utilisateurs ------------------ */
+            while ($ronde->getSesUsers()->count() < 2) {
+
+                $available = array_filter($users, function (User $u) use (
+                    $ronde, $indispoRepo, $start, $end, $jour, $assignedByDay
+                ) {
+                    /* déjà affecté à la ronde courante ? */
                     if ($ronde->getSesUsers()->contains($u)) return false;
-                    if ($indispoRepository->isUserUnavailableDuring($u, $start, $end)) return false;
-                    foreach ($u->getRondes() as $r) {
-                        if ($r !== $ronde && $r->getStart()->format('Y-m-d') === $jour) {
-                            return false;
-                        }
-                    }
+
+                    /* indisponible ? */
+                    if ($indispoRepo->isUserUnavailableDuring($u, $start, $end)) return false;
+
+                    /* déjà placé le même jour (en base OU dans $assignedByDay) ? */
+                    if (in_array($u->getId(), $assignedByDay[$jour], true)) return false;
+
                     return true;
                 });
 
-                if (!$available) {
-                    break;
-                }
+                if (!$available) break;    // plus personne de libre
 
+                /* tri par charge la plus faible */
                 usort($available, fn(User $a, User $b) =>
                     $userLoad[$a->getId()] <=> $userLoad[$b->getId()]
                 );
@@ -192,16 +215,19 @@ class AdminRondeController extends AbstractController
                 $chosen = $available[0];
                 $ronde->addSesUser($chosen);
                 $userLoad[$chosen->getId()]++;
+
+                // on mémorise tout de suite pour bloquer ce user dans les rondes suivantes du même jour
+                $assignedByDay[$jour][] = $chosen->getId();
             }
 
             $em->persist($ronde);
         }
 
         $em->flush();
-        $this->addFlash('success', 'Les rondes ont été réparties équitablement ✨');
-
+        $this->addFlash('success', 'Les rondes ont été réparties sans doublons journaliers ✨');
         return $this->redirectToRoute('admin_rondes_index');
     }
+
 
     #[Route('/{id}/delete', name: 'admin_rondes_delete', methods: ['POST'])]
     public function delete(Ronde $ronde, Request $req, EntityManagerInterface $em): Response
