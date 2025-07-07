@@ -8,20 +8,26 @@
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map { width:100%; height:calc(100vh - 140px); }
-        @media (min-width:768px){ #map{ height:80vh; } }
+        /* Hauteur plein écran sur mobile (100dvh gère les barres dynamiques) */
+        #map{
+            width:100%;
+            height:calc(100dvh - 140px);
+        }
+        /* Sur desktop on libère un peu d’espace vertical */
+        @media (min-width:768px){
+            #map{ height:80vh; }
+        }
 
+        /* Finitions Leaflet */
         .leaflet-popup-content-wrapper{ border-radius:12px; }
         .leaflet-popup-tip{ display:none; }
     </style>
 {% endblock %}
 
-
-
 {# ——— Contenu ——— #}
 {% block body %}
     <div class="container-fluid px-0">
-        <div id="map"></div>
+        <div id="map" role="region" aria-label="Carte des signalements"></div>
     </div>
 {% endblock %}
 
@@ -31,10 +37,14 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         /* --------------------------------------------------------------------
-  *  Carte Leaflet – affichage des signalements
-  * ------------------------------------------------------------------ */
+         *  Carte Leaflet – affichage des signalements
+         * ------------------------------------------------------------------ */
 
         const reports = {{ signalements|json_encode|raw }};   // injecté depuis Symfony
+
+        /* Centre & zoom par défaut (45.66985 / 0.21073) -------------------- */
+        const DEFAULT_CENTER = [45.66985, 0.21073];
+        const DEFAULT_ZOOM   = 17;
 
         /* Palette : une couleur par type ----------------------------------- */
         const colorByType = {
@@ -47,23 +57,19 @@
         };
 
         /* Helpers ----------------------------------------------------------- */
-        const cap = s => {
-            if (!s) return '';
-            s = String(s);
-            return s.charAt(0).toUpperCase() + s.slice(1);
-        };
-        const esc = s => {
-            if (!s) return '';
-            return (new DOMParser().parseFromString(String(s), 'text/html')).body.textContent;
-        };
+        const cap = s => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
+        const esc = s => s ? (new DOMParser().parseFromString(String(s), 'text/html')).body.textContent : '';
 
         /* Carte ------------------------------------------------------------- */
-        const map = L.map('map', { zoomControl:false });
+        const map = L.map('map', { zoomControl:false })
+            .setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+        /* Déplacement des boutons de zoom : plus confort sur mobile */
         L.control.zoom({ position:'bottomright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             maxZoom:19,
-            attribution:'&copy; OpenStreetMap'
+            attribution:'&copy; OpenStreetMap&nbsp;contributors'
         }).addTo(map);
 
         const markers = [];
@@ -82,19 +88,20 @@
             }).addTo(map);
 
             marker.bindPopup(`
-        <div class="fw-bold mb-1">${cap(safeType)}</div>
-        <div>${esc(r.description)}</div>
-    `);
+                <div class="fw-bold mb-1">${cap(safeType)}</div>
+                <div>${esc(r.description)}</div>
+            `);
 
             markers.push(marker);
         });
 
-        /* Centrage intelligent --------------------------------------------- */
-        if (markers.length) {
+        /* Centrage intelligent ---------------------------------------------
+        if (markers.length){
             map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
-        } else {
-            map.setView([46.16, -1.15], 10);   // La Rochelle par défaut
-        }
+        } // sinon on conserve le centre/zoom par défaut
+
+
+         */
 
         /* Position de l’utilisateur (non bloquante) ------------------------ */
         map.locate({ setView:false, watch:false, maxZoom:16, timeout:5000 })
@@ -110,16 +117,14 @@
             const div = L.DomUtil.create('div', 'bg-white p-2 rounded shadow');
             div.innerHTML = Object.entries(colorByType).map(
                 ([key, col]) => `
-            <div class="d-flex align-items-center mb-1">
-                <span style="width:12px;height:12px;background:${col};
-                             border-radius:50%;display:inline-block;margin-right:6px"></span>
-                ${cap(key)}
-            </div>`
+                    <div class="d-flex align-items-center mb-1">
+                        <span style="width:12px;height:12px;background:${col};
+                                     border-radius:50%;display:inline-block;margin-right:6px"></span>
+                        ${cap(key)}
+                    </div>`
             ).join('');
             return div;
         };
         legend.addTo(map);
-
     </script>
 {% endblock %}
-
