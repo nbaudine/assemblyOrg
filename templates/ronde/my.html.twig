@@ -7,76 +7,97 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        /* Animation douce à l’apparition */
-        .fade-in { animation: fadeIn 0.4s ease-out both; }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out both;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* Titres de journée */
         .list-day-title {
             color: #0055A5;
             font-weight: 700;
+            font-size: 1.15rem;
             border-bottom: 2px solid #e3e3e3;
             padding-bottom: .35rem;
         }
 
-        /* Items */
         .list-group-item {
-            transition: background-color .2s;
+            transition: background-color 0.2s, transform 0.2s;
+            border-left: 4px solid transparent;
         }
         .list-group-item:hover {
             background-color: #f6faff;
+            border-left-color: #0078D4;
+            transform: scale(1.01);
         }
 
-        /* Icônes bleues cohérentes */
         .bi-clock,
         .bi-calendar-event,
         .bi-calendar-check,
-        .bi-people { color: #0078D4; }
+        .bi-people,
+        .bi-info-circle {
+            color: #0078D4;
+        }
+
+        .ronde-time {
+            font-weight: 500;
+        }
+        .ronde-users {
+            margin-top: 2px;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
     </style>
 {% endblock %}
 
 {# ─────────────────────────── BODY ─────────────────────────── #}
 {% block body %}
     <main class="container py-4 fade-in">
-        <h2 class="mb-4 fw-bold " style="color:#0055A5;">
+        <h2 class="mb-3 fw-bold" style="color:#0055A5;">
             <i class="bi bi-calendar-check me-2"></i>Mes rondes à venir
         </h2>
 
+        <div class="alert alert-warning d-flex align-items-center shadow-sm mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+                Pensez à venir <strong>5 minutes en avance</strong> avant chaque ronde pour une bonne organisation.
+            </div>
+        </div>
+
+
         {% if rondes is empty %}
-            <div class="alert alert-info shadow-sm">
-                <i class="bi bi-info-circle me-1"></i>Aucune ronde prévue pour le moment.
+            <div class="alert alert-info shadow-sm d-flex align-items-center">
+                <i class="bi bi-info-circle me-2 fs-5"></i>
+                <div>Aucune ronde prévue pour le moment.</div>
             </div>
         {% else %}
             {% set lastDay = null %}
             {% for r in rondes %}
-                {# ─────────── Nouvelle journée ─────────── #}
-                {% set day = r.start|date('Y-m-d') %}
-                {% if day != lastDay %}
+                {% set currentDay = r.start|date('Y-m-d') %}
+                {% if currentDay != lastDay %}
                     {% if not loop.first %}</ul>{% endif %}
                     <h5 class="list-day-title mt-4 mb-2">
                         <i class="bi bi-calendar-event me-1"></i>{{ r.start|date_fr }}
                     </h5>
-                    <ul class="list-group mb-2">
-                    {% set lastDay = day %}
+                    <ul class="list-group">
+                    {% set lastDay = currentDay %}
                 {% endif %}
 
-                {# ─────────── Item de ronde ─────────── #}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-start">
                     <div>
-                        <i class="bi bi-clock me-1"></i>
-                        {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
-                        <div class="mt-1 small text-muted">
-                            <i class="bi bi-people me-1"></i>
-                            Avec&nbsp;:
-                            {{ r.sesUsers
-                            |filter(u => u != me)
-                            |map(u => u.prenom ~ ' ' ~ u.nom)
-                            |join(', ')
-                            }}
+                        <div class="ronde-time">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
                         </div>
+                        {% set autres = r.sesUsers|filter(u => u != me) %}
+                        {% if autres is not empty %}
+                            <div class="ronde-users">
+                                <i class="bi bi-people me-1"></i>
+                                Avec&nbsp;: {{ autres|map(u => u.prenom ~ ' ' ~ u.nom)|join(', ') }}
+                            </div>
+                        {% endif %}
                     </div>
                 </li>
             {% endfor %}

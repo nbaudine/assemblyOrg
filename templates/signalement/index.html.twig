@@ -26,6 +26,9 @@
 
 {% block body %}
     <div class="container-fluid p-3">
+        {% for msg in app.flashes('success') %}
+            <div class="alert alert-success shadow-sm fade-in">{{ msg }}</div>
+        {% endfor %}
         <div class="row g-4">
             <div class="col-12 col-lg-5">
                 <div class="card shadow border-0 rounded-4">
