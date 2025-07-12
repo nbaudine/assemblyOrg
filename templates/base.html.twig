@@ -61,12 +61,30 @@
             background-color: rgba(0,85,165,.1);
             border-radius: .375rem;
         }
+
+        #scrollTopBtn {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #scrollTopBtn.show {
+            display: flex !important;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #scrollTopBtn.hide {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
     </style>
 
     {% block stylesheets %}{% endblock %}
 </head>
 
 <body class="d-flex">
+<button id="scrollTopBtn" class="btn btn-primary rounded-circle shadow d-flex align-items-center justify-content-center" style="position:fixed; bottom:20px; right:20px; width:48px; height:48px; z-index:999; display:none;">
+    <i class="bi bi-arrow-up-short fs-4"></i>
+</button>
+
 
 {# SIDEBAR (desktop) #}
 {% if is_granted('ROLE_USER') %}
@@ -155,6 +173,27 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const scrollBtn = document.getElementById("scrollTopBtn");
+
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 200) {
+            scrollBtn.classList.add("show");
+            scrollBtn.classList.remove("hide");
+        } else {
+            scrollBtn.classList.add("hide");
+            setTimeout(() => scrollBtn.classList.remove("show"), 300);
+        }
+    });
+
+    scrollBtn.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+</script>
 
 {% block javascripts %}{% endblock %}
 </body>
