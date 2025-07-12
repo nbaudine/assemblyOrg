@@ -297,4 +297,41 @@
         {% endif %}
 
     </script>
+    {% if not is_granted('ROLE_ADMIN') %}
+        <script>
+            const submitBtn = document.getElementById('submit-btn');
+            const formElement = submitBtn.closest('form');
+            const latInput = document.getElementById('{{ form.latitude.vars.id }}');
+            const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
+
+            formElement.addEventListener('submit', function (e) {
+
+                e.preventDefault(); // bloque temporairement
+
+                // Feedback utilisateur
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '📍 Localisation en cours…';
+
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        latInput.value = pos.coords.latitude.toFixed(6);
+                        lonInput.value = pos.coords.longitude.toFixed(6);
+                        formElement.submit();
+                    },
+                    err => {
+                        alert("❌ Impossible d’obtenir une localisation précise. Veuillez réessayer ou activer le GPS.");
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '🚀 Envoyer le signalement';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        </script>
+    {% endif %}
+
+
 {% endblock %}
