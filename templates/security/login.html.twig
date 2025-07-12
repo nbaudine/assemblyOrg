@@ -23,6 +23,22 @@
             display: inline-block;
             animation: carDrive 3s ease-in-out infinite alternate;
         }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .gif-animated {
+            animation: fadeInUp 1.2s ease-out forwards;
+            opacity: 0;
+        }
     </style>
 
 
@@ -36,7 +52,7 @@
                     <h2 class="fw-bold " style="color: #0055A5;">Service Parking</h2>
                     <p class="text-muted small">Accès réservé aux utilisateurs autorisés</p>
 
-                    <img src="{{ asset('img/driving.gif') }}" alt="Voiture en mouvement" class="img-fluid rounded" style="max-width: 150px;">
+                    <img src="{{ asset('img/driving.gif') }}" alt="Voiture en mouvement" class="img-fluid rounded gif-animated" style="max-width: 150px;">
 
                 </div>
 
