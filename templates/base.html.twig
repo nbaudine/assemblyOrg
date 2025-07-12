@@ -122,6 +122,8 @@
 {% endif %}
 
 {# OFFCANVAS (mobile) #}
+{% if is_granted('ROLE_USER') %}
+
 <div class="d-md-none position-fixed top-0 start-0 w-100 bg-white shadow-sm z-3">
     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
         <a class="fw-bold h4 text-decoration-none" style="color:#0055A5;" href="{{ path('app_dashboard') }}">JW - Parking</a>
@@ -133,7 +135,6 @@
     </div>
 </div>
 
-{% if is_granted('ROLE_USER') %}
     <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="offcanvasMenu">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title">Menu</h5>
@@ -167,10 +168,11 @@
             </ul>
         </div>
     </div>
+    {# CONTENU PRINCIPAL #}
+
 {% endif %}
 
-{# CONTENU PRINCIPAL #}
-<div class="flex-grow-1 p-3 mt-5 mt-md-0">
+<div class="flex-grow-1 p-3  mt-md-0">
     {% block body %}{% endblock %}
 </div>
 
