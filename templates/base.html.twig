@@ -92,7 +92,7 @@
 {# SIDEBAR (desktop) #}
 {% if is_granted('ROLE_USER') %}
     <nav class="sidebar d-none d-md-flex flex-column p-3" style="width:250px;">
-        <h4 class="mb-4">JW - Parking</h4>
+        <a class="mb-4 h4 " href="{{ path('app_dashboard') }}">JW - Parking</a>
 
         <div class="menu-title text-uppercase fw-bold opacity-75 mb-2">Navigation</div>
         <ul class="nav nav-pills flex-column gap-2">
@@ -124,7 +124,7 @@
 {# OFFCANVAS (mobile) #}
 <div class="d-md-none position-fixed top-0 start-0 w-100 bg-white shadow-sm z-3">
     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-        <span class="fw-bold" style="color:#0055A5;">JW - Parking</span>
+        <a class="fw-bold h4" style="color:#0055A5;" href="{{ path('app_dashboard') }}">JW - Parking</a>
         {% if is_granted('ROLE_USER') %}
             <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
                 <i class="bi bi-list fs-4"></i>
