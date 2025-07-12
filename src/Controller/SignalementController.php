@@ -11,14 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/signalement')]
 #[IsGranted('ROLE_USER')]
 class SignalementController extends AbstractController
 {
-    #[Route('', name: 'signalement_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    #[Route('', name: 'signalement_index', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $em,SignalementRepository $repo): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');   // sécurité de base
 
@@ -60,13 +61,44 @@ class SignalementController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Merci ! Votre signalement a bien été envoyé.');
-            return $this->redirectToRoute('signalement_new');
+            return $this->redirectToRoute('signalement_index');
         }
 
-        return $this->render('signalement/new.html.twig', [
+        // On transforme les entités en tableau “prêt à consommer” côté JS
+        $signalements = array_map(static function ($s) {
+            return [
+                'id' => $s->getId(),
+                'lat'         => $s->getLatitude(),
+                'lon'         => $s->getLongitude(),
+                'type'        => $s->getType(),
+                'description' => $s->getDescription(),
+                'createdAt' => $s->getCreatedAt()?->format('d/m/Y H:i'),
+            ];
+        }, $repo->findAll());
+
+        return $this->render('signalement/index.html.twig', [
             'form' => $form->createView(),
+            'signalements' => $signalements,
         ]);
     }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/supprimer/{id}', name: 'signalement_supprimer', methods: ['POST'])]
+    public function supprimer(Signalement $signalement, Request $request, EntityManagerInterface $em, AuthorizationCheckerInterface $auth): Response
+    {
+        if (!$auth->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
+
+            $em->remove($signalement);
+            $em->flush();
+            $this->addFlash('success', 'Signalement supprimé.');
+
+
+        return $this->redirectToRoute('signalement_index');
+    }
+
+
 
     #[Route('/signalements/carte', name: 'signalement_map')]
     #[IsGranted('ROLE_ADMIN')]

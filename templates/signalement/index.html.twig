@@ -1,20 +1,294 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello SignalementController!{% endblock %}
+{% block title %}Signalement & Carte{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 60vh;
+            border-radius: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            #map {
+                height: 70vh;
+            }
+        }
+
+        .leaflet-popup-content-wrapper { border-radius: 12px; }
+        .leaflet-popup-tip { display: none; }
+    </style>
+{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    <div class="container-fluid p-3">
+        <div class="row g-4">
+            <div class="col-12 col-lg-5">
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <h2 class="text-center fw-bold text-danger">📍 Signalements</h2>
+                        <p class="text-muted text-center">Merci d'autoriser la géolocalisation pour un traitement optimal.</p>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+                        <div class="alert alert-info">
+                            <strong>Pourquoi ?</strong>
+                            <ul class="mb-0">
+                                <li>📌 Localisation rapide et précise</li>
+                                <li>✍️ Aucune saisie manuelle</li>
+                            </ul>
+                        </div>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/dev/assemblyOrga/src/Controller/SignalementController.php</code></li>
-        <li>Your template at <code>C:/dev/assemblyOrga/templates/signalement/index.html.twig</code></li>
-    </ul>
-</div>
+                        <div class="text-center my-3">
+                            <button class="btn btn-danger btn-lg w-100" onclick="getLocation()" id="locate-btn">
+                                📡 Activer la localisation
+                            </button>
+                            <div id="result" class="mt-2 fw-bold text-success"></div>
+                            <div id="spinner" class="text-center mt-2" style="display: none;">
+                                <div class="spinner-border text-secondary"></div>
+                            </div>
+                        </div>
+
+                        {{ form_start(form) }}
+                        <div class="row g-3" style="display: none">
+                            <div class="col-md-6">
+                                {{ form_label(form.latitude, 'Latitude') }}
+                                {{ form_widget(form.latitude, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.longitude, 'Longitude') }}
+                                {{ form_widget(form.longitude, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.type, 'Type de problème', {'label_attr': {'class': 'form-label fw-semibold d-block'}}) }}
+                            <div class="btn-group flex-wrap" role="group">
+                                {% for choice in form.type %}
+                                    {{ form_widget(choice, {'attr': {'class': 'btn-check', 'autocomplete': 'off'}}) }}
+                                    <label class="btn btn-outline-primary me-2 mb-2" for="{{ choice.vars.id }}">
+                                        {{ choice.vars.label }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {{ form_errors(form.type) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form_label(form.description, 'Description du problème') }}
+                            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+                        </div>
+
+                        <div class="text-end">
+                            <button class="btn btn-success btn-lg w-100">
+                                🚀 Envoyer le signalement
+                            </button>
+                        </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-7">
+                <div id="map" aria-label="Carte des signalements"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const reports = {{ signalements|json_encode|raw }};
+        const DEFAULT_CENTER = [45.66985, 0.21073];
+        const DEFAULT_ZOOM = 17;
+        const colorByType = {
+            fenetre:      '#0d6efd',
+            stationnement:'#fd7e14',
+            intrusion:    '#dc3545',
+            porte:        '#6f42c1',
+            alarme:       '#d63384',
+            autre:        '#6c757d'
+        };
+
+        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+        const esc = s => s ? (new DOMParser().parseFromString(String(s), 'text/html')).body.textContent : '';
+
+        const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: '&copy; ESRI & contributors'
+        });
+
+        const map = L.map('map', {
+            zoomControl: false,
+            layers: [osm]  // par défaut
+        }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+        // Boutons de couches
+        const baseMaps = {
+            "🗺 Plan": osm,
+            "🛰 Satellite": satellite
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+
+        const markers = [];
+        reports.forEach(r => {
+            const type = r.type?.toLowerCase() || 'autre';
+            const color = colorByType[type] || colorByType.autre;
+            const marker = L.circleMarker([r.lat, r.lon], {
+                radius: 10,
+                color,
+                fillColor: color,
+                fillOpacity: 0.85,
+                weight: 2
+            }).addTo(map);
+
+            let content = `
+        <div class="fw-bold mb-1">${cap(type)}</div>
+        <div class="text-muted mt-1 small">${esc(r.createdAt)}</div>
+        <div>${esc(r.description)}</div>
+
+    `;
+
+            {% if is_granted('ROLE_ADMIN') %}
+            content += `
+            <form method="post" action="/signalement/supprimer/${r.id}" onsubmit="return confirm('Supprimer ce signalement ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ '__ID__') }}">
+                <button class="btn btn-sm btn-outline-danger mt-2">🗑 Supprimer</button>
+            </form>
+        `.replace('__ID__', r.id);
+            {% endif %}
+
+            marker.bindPopup(content);
+            markers.push(marker);
+        });
+
+
+        map.locate({ setView: false, watch: false, maxZoom: 16, timeout: 5000 })
+            .on('locationfound', e => {
+                L.circleMarker(e.latlng, {
+                    radius: 8, color: '#198754', fillColor: '#198754', fillOpacity: 0.9
+                }).addTo(map).bindPopup('Vous êtes ici');
+            });
+
+        const legend = L.control({ position: 'topright' });
+        legend.onAdd = () => {
+            const div = L.DomUtil.create('div', 'bg-white p-2 rounded shadow');
+            div.innerHTML = Object.entries(colorByType).map(
+                ([key, col]) => `
+                    <div class="d-flex align-items-center mb-1">
+                        <span style="width:12px;height:12px;background:${col};border-radius:50%;display:inline-block;margin-right:6px"></span>
+                        ${cap(key)}
+                    </div>`
+            ).join('');
+            return div;
+        };
+        legend.addTo(map);
+
+        function getLocation () {
+            const result = document.getElementById('result');
+            const spinner = document.getElementById('spinner');
+            const locateBtn = document.getElementById('locate-btn');
+            const latInput = document.getElementById('{{ form.latitude.vars.id }}');
+            const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
+
+            result.textContent = '';
+            spinner.style.display = 'block';
+            locateBtn.disabled = true;
+            locateBtn.classList.remove('btn-success');
+            locateBtn.classList.add('btn-danger');
+            locateBtn.innerHTML = '📡 Recherche en cours…';
+
+            if (!navigator.geolocation) {
+                result.textContent = '❌ Géolocalisation non supportée.';
+                resetButton();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    latInput.value = lat;
+                    lonInput.value = lon;
+                    spinner.style.display = 'none';
+                    locateBtn.classList.remove('btn-danger');
+                    locateBtn.classList.add('btn-success');
+                    locateBtn.innerHTML = '✅ Localisation récupérée';
+                },
+                err => {
+                    const msg = {
+                        1: '⚠️ Autorisation refusée.',
+                        2: '⚠️ Position indisponible.',
+                        3: '⚠️ Délai dépassé.'
+                    }[err.code] || '⚠️ Erreur inconnue.';
+                    result.textContent = msg;
+                    resetButton();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+
+            function resetButton () {
+                spinner.style.display = 'none';
+                locateBtn.disabled = false;
+                locateBtn.classList.remove('btn-success');
+                locateBtn.classList.add('btn-danger');
+                locateBtn.innerHTML = '📡 Activer la localisation';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => getLocation());
+
+        {% if is_granted('ROLE_ADMIN') %}
+        let adminMarker = null;
+        map.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lon = e.latlng.lng.toFixed(6);
+
+            const latInput = document.getElementById('{{ form.latitude.vars.id }}');
+            const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
+
+            latInput.value = lat;
+            lonInput.value = lon;
+
+            if (adminMarker) {
+                adminMarker.setLatLng(e.latlng);
+            } else {
+                adminMarker = L.marker(e.latlng, {
+                    draggable: true,
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    })
+                }).addTo(map);
+
+                adminMarker.on('dragend', function (event) {
+                    const pos = event.target.getLatLng();
+                    latInput.value = pos.lat.toFixed(6);
+                    lonInput.value = pos.lng.toFixed(6);
+                });
+            }
+
+            adminMarker.bindPopup("📍 Position sélectionnée").openPopup();
+        });
+        {% endif %}
+
+    </script>
 {% endblock %}
