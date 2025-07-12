@@ -5,6 +5,7 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css" />
     <style>
         #map {
             width: 100%;
@@ -100,6 +101,7 @@
 {% block javascripts %}
     {{ parent() }}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js"></script>
     <script>
         const reports = {{ signalements|json_encode|raw }};
         const DEFAULT_CENTER = [45.66985, 0.21073];
@@ -128,7 +130,11 @@
 
         const map = L.map('map', {
             zoomControl: false,
-            layers: [osm]  // par défaut
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: 'topleft'
+            },
+            layers: [osm]
         }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
         // Boutons de couches
