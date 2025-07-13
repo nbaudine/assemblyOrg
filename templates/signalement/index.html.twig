@@ -310,6 +310,23 @@
         });
         {% endif %}
 
+        document.getElementById('locate-btn').addEventListener('click', function() {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    console.log('Localisation récupérée', pos.coords);
+                },
+                err => {
+                    if (err.code === 1) { // PERMISSION_DENIED
+                        alert('⚠️ Vous avez refusé l’accès à la localisation.\nVeuillez vérifier vos paramètres de navigateur pour l’activer.');
+                    } else {
+                        alert('❌ Erreur de localisation : ' + err.message);
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+
+
     </script>
     {% if not is_granted('ROLE_ADMIN') %}
         <script>
