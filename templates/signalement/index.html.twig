@@ -85,7 +85,7 @@
                         </div>
 
                         <div class="text-end">
-                            <button class="btn btn-success btn-lg w-100">
+                            <button id="submit-btn" class="btn btn-success btn-lg w-100">
                                 🚀 Envoyer le signalement
                             </button>
                         </div>
@@ -304,38 +304,28 @@
     </script>
     {% if not is_granted('ROLE_ADMIN') %}
         <script>
-            const submitBtn = document.getElementById('submit-btn');
-            const formElement = submitBtn.closest('form');
-            const latInput = document.getElementById('{{ form.latitude.vars.id }}');
-            const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
+            document.addEventListener('DOMContentLoaded', () => {
 
-            formElement.addEventListener('submit', function (e) {
+                const formElement = document.querySelector('form[name="{{ form.vars.name }}"]');
+                const submitBtn = document.getElementById('submit-btn');
+                const latInput = document.getElementById('{{ form.latitude.vars.id }}');
+                const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
 
-                e.preventDefault(); // bloque temporairement
-
-                // Feedback utilisateur
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '📍 Localisation en cours…';
-
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        latInput.value = pos.coords.latitude.toFixed(6);
-                        lonInput.value = pos.coords.longitude.toFixed(6);
-                        formElement.submit();
-                    },
-                    err => {
-                        alert("❌ Impossible d’obtenir une localisation précise. Veuillez réessayer ou activer le GPS.");
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '🚀 Envoyer le signalement';
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
+                formElement.addEventListener('submit', function (e) {
+                    if (!latInput.value || !lonInput.value) {
+                        e.preventDefault();
+                        alert("⚠️ La localisation est obligatoire pour envoyer un signalement.\nVeuillez cliquer sur '📡 Activer la localisation' et patienter.");
+                        return false;
                     }
-                );
+
+                    // Optionnel : désactive le bouton pour éviter les doubles clics
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '📍 Envoi en cours…';
+                });
+
             });
         </script>
+
     {% endif %}
 
 
