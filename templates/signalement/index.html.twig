@@ -85,8 +85,8 @@
                         </div>
 
                         <div class="text-end">
-                            <button id="submit-btn" class="btn btn-success btn-lg w-100" disabled>
-                                En attente de position...
+                            <button id="submit-btn" class="btn btn-success btn-lg w-100" disabled >
+                                🚀 Envoyer le signalement
                             </button>
                         </div>
                         {{ form_end(form) }}
@@ -218,6 +218,7 @@
             const locateBtn = document.getElementById('locate-btn');
             const latInput = document.getElementById('{{ form.latitude.vars.id }}');
             const lonInput = document.getElementById('{{ form.longitude.vars.id }}');
+            const submitBtn = document.getElementById('submit-btn');
 
             result.textContent = '';
             spinner.style.display = 'block';
@@ -229,12 +230,8 @@
             if (!navigator.geolocation) {
                 result.textContent = '❌ Géolocalisation non supportée.';
                 resetButton();
+                submitBtn.disabled = true;
                 return;
-            }else{
-                const submitBtn = document.getElementById('submit-btn');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '🚀 Envoyer le signalement';
-
             }
 
             navigator.geolocation.getCurrentPosition(
@@ -247,6 +244,7 @@
                     locateBtn.classList.remove('btn-danger');
                     locateBtn.classList.add('btn-success');
                     locateBtn.innerHTML = '✅ Localisation récupérée';
+                    submitBtn.disabled = false; // 🔓 Active le bouton d'envoi
                 },
                 err => {
                     const msg = {
@@ -256,11 +254,10 @@
                     }[err.code] || '⚠️ Erreur inconnue.';
                     result.textContent = msg;
                     resetButton();
+                    submitBtn.disabled = true; // 🔒 Désactive l'envoi en cas d'échec
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
             );
-
-
 
             function resetButton () {
                 spinner.style.display = 'none';
@@ -270,6 +267,7 @@
                 locateBtn.innerHTML = '📡 Activer la localisation';
             }
         }
+
 
         document.addEventListener('DOMContentLoaded', () => getLocation());
 
