@@ -58,11 +58,11 @@
                         <div class="row g-3" style="display: none">
                             <div class="col-md-6">
                                 {{ form_label(form.latitude, 'Latitude') }}
-                                {{ form_widget(form.latitude, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_widget(form.latitude, {'attr': {'class': 'form-control required'}}) }}
                             </div>
                             <div class="col-md-6">
                                 {{ form_label(form.longitude, 'Longitude') }}
-                                {{ form_widget(form.longitude, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_widget(form.longitude, {'attr': {'class': 'form-control required'}}) }}
                             </div>
                         </div>
 
@@ -161,7 +161,7 @@
             const type = r.type?.toLowerCase() || 'autre';
             const color = colorByType[type] || colorByType.autre;
             const marker = L.circleMarker([r.lat, r.lon], {
-                radius: 10,
+                radius: 5,
                 color,
                 fillColor: color,
                 fillOpacity: 0.85,
@@ -188,13 +188,15 @@
             markers.push(marker);
         });
 
-
+/*
         map.locate({ setView: false, watch: false, maxZoom: 16, timeout: 5000 })
             .on('locationfound', e => {
                 L.circleMarker(e.latlng, {
                     radius: 8, color: '#198754', fillColor: '#198754', fillOpacity: 0.9
                 }).addTo(map).bindPopup('Vous êtes ici');
             });
+            */
+
 
         const legend = L.control({ position: 'topright' });
         legend.onAdd = () => {
