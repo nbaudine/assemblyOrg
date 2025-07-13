@@ -86,7 +86,7 @@
 
                         <div class="text-end">
                             <button id="submit-btn" class="btn btn-success btn-lg w-100" disabled >
-                                🚀 Envoyer le signalement
+                                En attente de localisation...
                             </button>
                         </div>
                         {{ form_end(form) }}
@@ -245,6 +245,7 @@
                     locateBtn.classList.add('btn-success');
                     locateBtn.innerHTML = '✅ Localisation récupérée';
                     submitBtn.disabled = false; // 🔓 Active le bouton d'envoi
+                    submitBtn.innerHTML = '🚀 Envoyer le signalement';
                 },
                 err => {
                     const msg = {
@@ -255,6 +256,9 @@
                     result.textContent = msg;
                     resetButton();
                     submitBtn.disabled = true; // 🔒 Désactive l'envoi en cas d'échec
+                    submitBtn.innerHTML = 'En attente de localisation...';
+
+
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
             );
