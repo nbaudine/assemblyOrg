@@ -27,6 +27,9 @@ class Ronde
     #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'rondes')]
     private Collection $sesUsers;
 
+    #[ORM\Column]
+    private ?bool $isPieton = null;
+
     public function __construct()
     {
         $this->sesUsers = new ArrayCollection();
@@ -81,6 +84,18 @@ class Ronde
     public function removeSesUser(User $sesUser): static
     {
         $this->sesUsers->removeElement($sesUser);
+
+        return $this;
+    }
+
+    public function isPieton(): ?bool
+    {
+        return $this->isPieton;
+    }
+
+    public function setIsPieton(bool $isPieton): static
+    {
+        $this->isPieton = $isPieton;
 
         return $this;
     }

@@ -54,12 +54,53 @@ final class RondeResetController extends AbstractController
                         (new Ronde())
                             ->setStart(\DateTime::createFromImmutable($slotStart))
                             ->setEnd(\DateTime::createFromImmutable($slotEnd))
+                        ->setIsPieton(false)
                     );
 
                     $slotStart = $slotEnd;
                 }
             }
         }
+
+        //RONDE PIETON VENDREDI
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-18 12:00:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-18 12:45:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-18 12:45:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-18 13:30:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
+        //RONDES PIETON SAMEDI
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-19 12:00:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-19 12:45:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-19 12:45:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-19 13:30:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
+        //RONDES PIETON DIMANCHE
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-20 12:00:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-20 12:45:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
+        $rondePietonneA = new Ronde();
+        $rondePietonneA->setStart(new \DateTime("2025-07-20 12:45:00"));
+        $rondePietonneA->setEnd(new \DateTime("2025-07-20 13:30:00"));
+        $rondePietonneA->setIsPieton(true);
+        $em->persist($rondePietonneA);
+
 
         $em->flush();
 

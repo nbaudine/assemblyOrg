@@ -92,6 +92,8 @@ class AppFixtures extends Fixture
                 $user->setRoles(['ROLE_USER']);
             }
 
+
+
             $hashedPassword = $this->passwordHasher->hashPassword($user, '144000');
             $user->setPassword($hashedPassword);
 

@@ -53,6 +53,11 @@
                                            {% if 'ROLE_ADMIN' in user.roles %}checked{% endif %}>
                                     <label class="form-check-label" for="role_admin">ROLE_ADMIN</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="ROLE_NO_ROUND" id="ROLE_NO_ROUND" name="roles[]"
+                                           {% if 'ROLE_NO_ROUND' in user.roles %}checked{% endif %}>
+                                    <label class="form-check-label" for="role_admin">ROLE_NO_ROUND</label>
+                                </div>
                             </div>
 
                             {# Mot de passe (obligatoire si création) #}

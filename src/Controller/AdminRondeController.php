@@ -158,7 +158,12 @@ class AdminRondeController extends AbstractController
     ): Response {
 
         $rondes = $rondeRepo->findBy([], ['start' => 'ASC']);
-        $users  = $userRepo->findAll();
+        $users = $userRepo->findAll();
+
+        //RETRAIT ROLE NON RONDES
+        $users = array_filter($users, function ($user) {
+            return !in_array('ROLE_NO_ROUND', $user->getRoles(), true);
+        });
 
         /* ----------- charge le nombre de participations par user ------------ */
         $userLoad = [];                // [id => nbParticipations]
