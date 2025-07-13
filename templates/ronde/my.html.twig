@@ -88,9 +88,15 @@
                 <li class="list-group-item d-flex justify-content-between align-items-start">
                     <div>
                         <div class="ronde-time">
-                            <i class="bi bi-clock me-1"></i>
-                            {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
+                            {% if r.isPieton %}
+                                <i class="bi bi-person-walking me-1"></i>
+                                Passage piéton – {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
+                            {% else %}
+                                <i class="bi bi-clock me-1"></i>
+                                {{ r.start|date('H:i', 'Europe/Paris') }} → {{ r.end|date('H:i', 'Europe/Paris') }}
+                            {% endif %}
                         </div>
+
                         {% set autres = r.sesUsers|filter(u => u != me) %}
                         {% if autres is not empty %}
                             <div class="ronde-users">
