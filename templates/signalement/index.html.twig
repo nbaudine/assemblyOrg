@@ -230,6 +230,11 @@
                 result.textContent = '❌ Géolocalisation non supportée.';
                 resetButton();
                 return;
+            }else{
+                const submitBtn = document.getElementById('submit-btn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🚀 Envoyer le signalement';
+
             }
 
             navigator.geolocation.getCurrentPosition(
@@ -255,9 +260,6 @@
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
             );
 
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '🚀 Envoyer le signalement';
 
 
             function resetButton () {
