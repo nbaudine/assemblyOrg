@@ -72,13 +72,27 @@ class AdminUserController extends AbstractController
     public function delete(User $user, Request $request, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete-user-' . $user->getId(), $request->request->get('_token'))) {
+
+            // Suppression des indisponibilités
+            foreach ($user->getIndisponibilites() as $indispo) {
+                $em->remove($indispo);
+            }
+
+            // Suppression des rondes (exemple, adapte si ta relation s'appelle différemment)
+            foreach ($user->getRondes() as $ronde) {
+                $em->remove($ronde);
+            }
+
+            // Enfin suppression de l'utilisateur
             $em->remove($user);
             $em->flush();
-            $this->addFlash('success', 'Utilisateur supprimé.');
+
+            $this->addFlash('success', 'Utilisateur et ses données associées supprimés.');
         }
 
         return $this->redirectToRoute('admin_users_index');
     }
+
 
     /** Remplit l’entité User depuis la requête */
     private function hydrateFromRequest(

@@ -1,11 +1,12 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}Mes indisponibilités{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
     <style>
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -14,29 +15,44 @@
         }
 
         .badge-periode {
-            background: linear-gradient(90deg, #0078D4, #0055A5);
+            background: linear-gradient(90deg, #0d6efd, #084298);
             color: #fff;
-            border-radius: .5rem;
-            padding: .25rem .6rem;
+            border-radius: 999px;
+            padding: .4rem .8rem;
             font-size: .75rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
         }
 
         .card-i {
-            transition: background .2s, box-shadow .3s;
-            border-left: 5px solid #0078D4;
+            transition: box-shadow 0.2s ease-in-out, transform 0.2s;
             border-radius: 1rem;
+            border: none;
+            background: #f9f9f9;
         }
 
         .card-i:hover {
-            background: #f0f7ff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+            background: #f1f5f9;
         }
 
-        .toast-container {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1080;
+        .btn-outline-primary {
+            border-radius: 999px;
+        }
+
+        .alert-warning {
+            background: #fff8e1;
+            color: #8a6d3b;
+            border: 1px solid #ffe9b5;
+            border-radius: 0.75rem;
+        }
+
+        .alert-info {
+            background: #e7f5ff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 0.75rem;
         }
 
         @media (max-width: 767px) {
@@ -53,18 +69,18 @@
     <main class="container py-4 fade-in">
 
         <div class="d-flex justify-content-between align-items-start flex-column flex-md-row gap-3 mb-4">
-            <h1 class="h4 fw-bold m-0" style="color:#0055A5;">
-                <i class="bi bi-person-x me-2"></i> Mes indisponibilités
+            <h1 class="h4 fw-bold m-0 text-primary">
+                <i class="bi bi-calendar-x me-2"></i> Mes indisponibilités
             </h1>
-            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#indispoModal">
-                <i class="bi bi-plus-circle me-1"></i> Ajouter une indisponibilité
+            <button class="btn btn-outline-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#indispoModal">
+                <i class="bi bi-plus-circle me-2"></i> Ajouter
             </button>
         </div>
 
         <div class="alert alert-warning d-flex align-items-center gap-2 fade-in mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill fs-5"></i>
             <div>
-                Merci d’indiquer vos indisponibilités à l’avance. C’est essentiel pour organiser efficacement le programme des rondes et éviter les conflits de planning.
+                Merci d’indiquer vos indisponibilités à l’avance pour organiser les rondes efficacement.
             </div>
         </div>
 
@@ -74,13 +90,11 @@
             </div>
         {% else %}
             {% for i in indispos %}
-                <div class="card card-i mb-3 shadow-sm border-0">
+                <div class="card card-i mb-3 shadow-sm">
                     <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                        <span class="badge-periode">
-                            {{ i.start|date('d/m/Y H:i') }} → {{ i.end|date('d/m/Y H:i') }}
-                        </span>
-                        </div>
+                    <span class="badge-periode">
+                        {{ i.start|date('d/m/Y H:i') }} → {{ i.end|date('d/m/Y H:i') }}
+                    </span>
                         <button class="btn btn-sm btn-outline-danger del-btn" data-id="{{ i.id }}">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -97,19 +111,18 @@
             <div class="modal-content">
                 <form id="indispoForm">
                     <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-calendar-plus me-2 text-primary"></i>Ajouter une indisponibilité
+                        <h5 class="modal-title text-primary">
+                            <i class="bi bi-calendar-plus me-2"></i> Ajouter une indisponibilité
                         </h5>
                         <button class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="text-muted small mb-2">
-                            Jours :
+                        <div class="mb-3">
+                            <div class="text-muted small mb-2">Jours concernés :</div>
                             {% for j in joursRondes %}
-                                <span class="badge bg-light border text-dark">{{ j|date('d/m/Y') }}</span>
+                                <span class="badge bg-light text-dark border">{{ j|date('d/m/Y') }}</span>
                             {% endfor %}
                         </div>
-
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Début</label>
@@ -124,7 +137,7 @@
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                         <button class="btn btn-primary" type="submit">
-                            <i class="bi bi-check-circle me-1"></i>Enregistrer
+                            <i class="bi bi-check-circle me-1"></i> Enregistrer
                         </button>
                     </div>
                 </form>
@@ -133,34 +146,30 @@
     </div>
 
     {# -------- Toast -------- #}
-    <div class="toast-container">
+    <div class="toast-container position-fixed top-0 end-0 p-3">
         <div id="okToast" class="toast text-bg-success border-0 rounded shadow" role="alert">
             <div class="d-flex align-items-center">
                 <div class="toast-body">
-                    <i class="bi bi-check-circle-fill me-2"></i>Indisponibilité enregistrée.
+                    <i class="bi bi-check-circle-fill me-2"></i> Indisponibilité enregistrée.
                 </div>
                 <button class="btn-close btn-close-white ms-auto me-2" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
 {% endblock %}
+
 {% block javascripts %}
     {{ parent() }}
     <script>
-        /* Liste des jours de rondes futures — format "YYYY-MM-DD" */
         const joursValides = {{ joursRondes|json_encode|raw }};
-
         document.addEventListener('DOMContentLoaded', () => {
-
-            /* ---------- éléments ---------- */
-            const toast      = new bootstrap.Toast(document.getElementById('okToast'));
-            const modalEl    = document.getElementById('indispoModal');
-            const modal      = new bootstrap.Modal(modalEl);
+            const toast = new bootstrap.Toast(document.getElementById('okToast'));
+            const modal = new bootstrap.Modal(document.getElementById('indispoModal'));
             const startInput = document.getElementById('startInput');
-            const endInput   = document.getElementById('endInput');
-            const pad        = n => n.toString().padStart(2, '0');
+            const endInput = document.getElementById('endInput');
 
-            /* ---------- helpers ---------- */
+            const pad = n => n.toString().padStart(2, '0');
+
             const setEndPlus30 = () => {
                 if (!startInput.value) return;
                 const s = new Date(startInput.value);
@@ -169,33 +178,29 @@
                 endInput.value = `${e.getFullYear()}-${pad(e.getMonth() + 1)}-${pad(e.getDate())}T${pad(e.getHours())}:${pad(e.getMinutes())}`;
             };
 
-            /* ---------- Ouverture de la modale : pré-sélection du 1er jour valide ---------- */
-            modalEl.addEventListener('show.bs.modal', () => {
-                if (!joursValides.length) return;                    // sécurité
-
-                const defaultStart = `${joursValides[0]}T09:00`;     // 09 h 00 par défaut
-                startInput.value   = defaultStart;
-                setEndPlus30();
-            });
-
-            /* ---------- Vérifie que le jour choisi appartient à joursValides ---------- */
-            startInput.addEventListener('change', () => {
-                const jour = startInput.value.slice(0, 10);          // "YYYY-MM-DD"
-                if (!joursValides.includes(jour)) {
-                    alert('⚠ Ce jour ne correspond à aucune ronde planifiée. Choisis un jour valide.');
-                    startInput.value = '';
-                    endInput.value   = '';
-                    return;
+            document.getElementById('indispoModal').addEventListener('show.bs.modal', () => {
+                if (joursValides.length) {
+                    startInput.value = `${joursValides[0]}T09:00`;
+                    setEndPlus30();
                 }
-                setEndPlus30();
             });
 
-            /* ---------- AJOUT indisponibilité ---------- */
+            startInput.addEventListener('change', () => {
+                const jour = startInput.value.slice(0, 10);
+                if (!joursValides.includes(jour)) {
+                    alert('⚠ Ce jour ne correspond à aucune ronde planifiée.');
+                    startInput.value = '';
+                    endInput.value = '';
+                } else {
+                    setEndPlus30();
+                }
+            });
+
             document.getElementById('indispoForm').addEventListener('submit', async e => {
                 e.preventDefault();
                 const res = await fetch('{{ path("user_indispo_ajax_create") }}', {
-                    method : 'POST',
-                    body   : new FormData(e.target),
+                    method: 'POST',
+                    body: new FormData(e.target),
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (res.ok) {
@@ -205,13 +210,12 @@
                 }
             });
 
-            /* ---------- SUPPRESSION ---------- */
             document.querySelectorAll('.del-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     if (!confirm('Supprimer cette indisponibilité ?')) return;
                     const url = '{{ path("user_indispo_ajax_delete", {id: 0}) }}'.replace('/0/', '/' + btn.dataset.id + '/');
                     const res = await fetch(url, {
-                        method : 'POST',
+                        method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
                     if (res.ok) {
