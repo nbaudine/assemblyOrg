@@ -1,0 +1,31 @@
+<div class="mb-4">
+    <h6 class="text-secondary fw-bold mb-3">Indisponibilités :</h6>
+    {% if user.indisponibilites|length == 0 %}
+        <div class="text-muted small">Aucune indisponibilité.</div>
+    {% else %}
+        <ul class="list-group list-group-flush">
+            {% for i in user.indisponibilites %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ i.start|date('d/m/Y H:i') }} → {{ i.end|date('d/m/Y H:i') }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+
+<div>
+    <h6 class="text-secondary fw-bold mb-3">Rondes :</h6>
+    {% if user.rondes|length == 0 %}
+        <div class="text-muted small">Aucune ronde.</div>
+    {% else %}
+        <ul class="list-group list-group-flush">
+            {% for r in user.rondes %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ r.start|date('d/m/Y H:i') }}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>

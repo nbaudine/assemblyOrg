@@ -47,6 +47,15 @@ class AdminUserController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/details', name: 'admin_users_details', methods: ['GET'])]
+    public function details(User $user): Response
+    {
+        return $this->render('admin/user/_details.html.twig', [
+            'user' => $user,
+        ]);
+    }
+
+
     #[Route('/{id}/edit', name: 'admin_users_edit', methods: ['GET', 'POST'])]
     public function edit(
         User $user,
@@ -92,6 +101,8 @@ class AdminUserController extends AbstractController
 
         return $this->redirectToRoute('admin_users_index');
     }
+
+
 
 
     /** Remplit l’entité User depuis la requête */
