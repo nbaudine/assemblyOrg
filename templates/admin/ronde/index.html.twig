@@ -110,6 +110,11 @@
                             onclick="return confirm('⚠ Cette action va supprimer toutes les rondes existantes puis recréer le planning par défaut. Continuer ?');">
                         <i class="bi bi-arrow-repeat me-1"></i> Réinitialiser les rondes
                     </button>
+
+                    <a href="{{ path('admin_rondes_export_pdf') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                    </a>
+
                 </form>
 
             </div>

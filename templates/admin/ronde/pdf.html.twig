@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-size: 11pt;
+            color: #333;
+            line-height: 1.4;
+            margin: 20px;
+        }
+
+        h1.title {
+            text-align: center;
+            font-size: 18pt;
+            color: #0055A5;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0055A5;
+            padding-bottom: 5px;
+        }
+
+        h2.jour {
+            font-size: 14pt;
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #999;
+            padding-bottom: 3px;
+        }
+
+        .ronde-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 12px;
+            background: #f9f9f9;
+        }
+
+        .ronde-header {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #0055A5;
+            margin-bottom: 6px;
+        }
+
+        .participants {
+            margin-top: 5px;
+        }
+
+        .participant {
+            display: inline-block;
+            background: #0078D4;
+            color: #fff;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 9pt;
+            margin: 2px 4px 2px 0;
+        }
+
+        .participant.unavailable {
+            background: #FF6400;
+        }
+
+        .no-ronde {
+            font-style: italic;
+            color: #888;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<h1 class="title">Export PDF des Rondes</h1>
+
+{% set libJours = {'Friday':'Vendredi','Saturday':'Samedi','Sunday':'Dimanche'} %}
+{% set grouped = {} %}
+{% for r in rondes %}
+    {% set j = r.start|date('l') %}
+    {% set grouped = grouped|merge({ (j): (grouped[j]|default([]))|merge([r]) }) %}
+{% endfor %}
+
+{% for jour, list in grouped %}
+    <h2 class="jour">{{ libJours[jour]|default(jour) }}</h2>
+
+    {% for r in list|sort((a,b)=>a.start <=> b.start) %}
+        <div class="ronde-card">
+            <div class="ronde-header">
+                {{ r.start|date('H:i') }} -> {{ r.end|date('H:i') }}
+            </div>
+            <div class="participants">
+                {% for u in r.sesUsers %}
+                    {% set isUnavailable = u.id in (unavailableMap[r.id]|default([])) %}
+                    <span class="participant {{ isUnavailable ? 'unavailable' : '' }}">
+                        {{ u.prenom }} {{ u.nom }}
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+    {% if not loop.last %}
+        <div style="page-break-after: always;"></div>
+    {% endif %}
+{% else %}
+    <p class="no-ronde">Aucune ronde planifiée.</p>
+{% endfor %}
+
+<div class="footer">
+    Généré le {{ "now"|date("d/m/Y H:i") }}
+</div>
+
+</body>
+</html>

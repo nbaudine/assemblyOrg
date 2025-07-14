@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Repository\IndisponibiliteRepository;
 use App\Repository\RondeRepository;
 use App\Repository\UserRepository;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -62,6 +63,47 @@ class AdminRondeController extends AbstractController
             'unavailableMap' => $unavailableMap,
         ]);
     }
+
+    #[Route('/export-pdf', name: 'admin_rondes_export_pdf')]
+    public function exportPdf(RondeRepository $rondeRepo, EntityManagerInterface $em, PdfService $pdfService): Response
+    {
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris'));
+
+        $rondes = $rondeRepo->createQueryBuilder('r')
+            ->where('r.end >= :now')
+            ->setParameter('now', $now)
+            ->orderBy('r.start', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $unavailableMap = [];
+        if ($rondes) {
+            $ids = array_map(fn(Ronde $r) => $r->getId(), $rondes);
+
+            $rows = $em->createQuery('
+            SELECT r.id  AS ronde_id,
+                   u.id  AS user_id
+            FROM   App\Entity\Ronde            r
+            JOIN   r.sesUsers                  u
+            JOIN   App\Entity\Indisponibilite  ind WITH ind.user = u
+            WHERE  r.id IN (:ids)
+              AND  r.start >= ind.start
+              AND  r.end   <= ind.end
+        ')
+                ->setParameter('ids', $ids)
+                ->getArrayResult();
+
+            foreach ($rows as $row) {
+                $unavailableMap[$row['ronde_id']][] = (int) $row['user_id'];
+            }
+        }
+
+        return $pdfService->generatePdf('admin/ronde/pdf.html.twig', [
+            'rondes'         => $rondes,
+            'unavailableMap' => $unavailableMap,
+        ], 'rondes_' . date('Y-m-d_H-i') . '.pdf');
+    }
+
 
     /* --------------------------------------------------------------------- */
     /*  AJAX : liste des utilisateurs disponibles                            */
